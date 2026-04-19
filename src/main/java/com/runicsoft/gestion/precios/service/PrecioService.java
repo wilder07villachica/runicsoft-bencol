@@ -2,6 +2,9 @@ package com.runicsoft.gestion.precios.service;
 
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.clientes.repository.ClienteRepository;
+import com.runicsoft.gestion.precios.dtos.request.PrecioRequest;
+import com.runicsoft.gestion.precios.dtos.response.PrecioResponse;
+import com.runicsoft.gestion.precios.mapper.PrecioMapper;
 import com.runicsoft.gestion.precios.model.Precio;
 import com.runicsoft.gestion.precios.repository.PrecioRepository;
 import com.runicsoft.gestion.productos.model.Producto;
@@ -19,48 +22,51 @@ public class PrecioService {
     private final PrecioRepository precioRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
+    private final PrecioMapper mapper;
 
     @Transactional(readOnly = true)
-    public List<Precio> findAll() {
-        return precioRepository.findAll();
+    public List<PrecioResponse> findAll() {
+        return precioRepository.findAll()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public Precio findById(Long id) {
+    public PrecioResponse findById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ingresar un ID valido para poder continuar.");
         }
-        return precioRepository.findById(id).orElseThrow(
+        Precio precio = precioRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("El registro con el ID: " +  id + " no existe")
         );
+        return mapper.toResponse(precio);
     }
 
     @Transactional
-    public Precio save(Precio precio) {
-        if (precio.getCliente() == null || precio.getCliente().getId() == null || precio.getCliente().getId() <= 0) {
+    public PrecioResponse save(PrecioRequest request) {
+        if (request.getCliente() == null || request.getCliente().getId() == null || request.getCliente().getId() <= 0) {
             throw new IllegalArgumentException("Ingresar un ID de cliente válido.");
         }
-        if (precio.getProducto() == null || precio.getProducto().getId() == null || precio.getProducto().getId() <= 0) {
+        if (request.getProducto() == null || request.getProducto().getId() == null || request.getProducto().getId() <= 0) {
             throw new IllegalArgumentException("Ingresar un ID de producto válido.");
         }
-
-        Cliente clienteId = clienteRepository.findById(precio.getCliente().getId()).orElseThrow(
+        Cliente clienteId = clienteRepository.findById(request.getCliente().getId()).orElseThrow(
                 () -> new IllegalArgumentException("El cliente no existe")
         );
-        Producto productoId= productoRepository.findById(precio.getProducto().getId()).orElseThrow(
+        Producto productoId= productoRepository.findById(request.getProducto().getId()).orElseThrow(
                 () -> new IllegalArgumentException("El producto no existe")
         );
-
-        precio.setCliente(clienteId);
-        precio.setProducto(productoId);
-
         boolean existe = precioRepository.existsByClienteIdAndProductoIdAndTipoPrecio(
-                clienteId.getId(), productoId.getId(),  precio.getTipoPrecio()
+                clienteId.getId(), productoId.getId(),  request.getTipoPrecio()
         );
         if (existe) {
             throw new IllegalArgumentException("El precio ya existe para este cliente y producto.");
         }
-
-        return precioRepository.save(precio);
+        Precio precio = mapper.toEntity(request);
+        request.setCliente(clienteId);
+        request.setProducto(productoId);
+        Precio precioGuardado = precioRepository.save(precio);
+        return mapper.toResponse(precioGuardado);
     }
 }

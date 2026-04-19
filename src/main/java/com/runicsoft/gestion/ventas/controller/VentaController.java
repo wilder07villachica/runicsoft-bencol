@@ -1,5 +1,8 @@
 package com.runicsoft.gestion.ventas.controller;
 
+import com.runicsoft.gestion.ventas.dtos.request.VentaRequest;
+import com.runicsoft.gestion.ventas.dtos.response.VentaResponse;
+import com.runicsoft.gestion.ventas.dtos.response.VentaResumenResponse;
 import com.runicsoft.gestion.ventas.model.Venta;
 import com.runicsoft.gestion.ventas.service.VentaService;
 import lombok.RequiredArgsConstructor;
@@ -18,20 +21,20 @@ public class VentaController {
     private final VentaService ventaService;
 
     @GetMapping
-    public ResponseEntity<List<Venta>> findAll(){
-        List<Venta> ventas = ventaService.findAll();
+    public ResponseEntity<List<VentaResumenResponse>> findAll(){
+        List<VentaResumenResponse> ventas = ventaService.findAll();
         return ResponseEntity.status(HttpStatus.OK).body(ventas);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Venta> findById(@PathVariable Long id){
-        Venta venta = ventaService.findById(id);
+    public ResponseEntity<VentaResponse> findById(@PathVariable Long id){
+        VentaResponse venta = ventaService.findById(id);
         return ResponseEntity.status(HttpStatus.OK).body(venta);
     }
 
     @PostMapping
-    public ResponseEntity<Venta> save(@RequestBody Venta venta){
-        Venta saved = ventaService.save(venta);
+    public ResponseEntity<VentaResponse> save(@RequestBody VentaRequest venta){
+        VentaResponse saved = ventaService.save(venta);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 }

@@ -8,6 +8,10 @@ import com.runicsoft.gestion.precios.repository.PrecioRepository;
 import com.runicsoft.gestion.productos.model.Producto;
 import com.runicsoft.gestion.productos.repository.ProductoRepository;
 import com.runicsoft.gestion.utils.TipoPago;
+import com.runicsoft.gestion.ventas.dtos.request.VentaRequest;
+import com.runicsoft.gestion.ventas.dtos.response.VentaResponse;
+import com.runicsoft.gestion.ventas.dtos.response.VentaResumenResponse;
+import com.runicsoft.gestion.ventas.mapper.VentaMapper;
 import com.runicsoft.gestion.ventas.model.DetalleVenta;
 import com.runicsoft.gestion.ventas.model.Venta;
 import com.runicsoft.gestion.ventas.repository.VentaRepository;
@@ -26,63 +30,85 @@ public class VentaService {
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
     private final PrecioRepository precioRepository;
-    private final PrecioCategoriaRepository precioCategoriaRepository;
+    private final VentaMapper ventaMapper;
 
     @Transactional(readOnly = true)
-    public List<Venta> findAll() {
-        return ventaRepository.findAll();
+    public List<VentaResumenResponse> findAll() {
+        return ventaRepository.findAll()
+                .stream()
+                .map(ventaMapper::toResumenResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public Venta findById(Long id) {
+    public VentaResponse findById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ingresar un ID valido para poder continuar.");
         }
-        return ventaRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("El registro con el ID: " +  id + " no existe")
+        Venta venta = ventaRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("El registro con el ID: " + id + " no existe")
         );
+        return ventaMapper.toResponse(venta);
     }
 
     @Transactional
-    public Venta save(Venta venta) {
-        if (venta.getCliente() == null || venta.getCliente().getId() == null) {
-            throw new IllegalArgumentException("Debe proporcionar un cliente asociado a la venta.");
-        }
-        if (venta.getDetalleVentas() == null || venta.getDetalleVentas().isEmpty()) {
-            throw  new  IllegalArgumentException("Toda venta debe tener un detalle asociado.");
-        }
-        if (venta.getTipoPago() == null) {
-            throw new   IllegalArgumentException("Debe proporcionar un tipo de pago.");
+    public VentaResponse save(VentaRequest request) {
+        if (request.getClienteId() == null || request.getClienteId() <= 0) {
+            throw new IllegalArgumentException("Debe proporcionar un ID de cliente válido.");
         }
 
-        Cliente cliente = clienteRepository.findById(venta.getCliente().getId()).orElseThrow(
-                () -> new IllegalArgumentException("El cliente con el ID: " +   venta.getCliente().getId() + " no existe")
-        );
+        if (request.getDetalleVentas() == null || request.getDetalleVentas().isEmpty()) {
+            throw new IllegalArgumentException("Toda venta debe tener al menos un detalle asociado.");
+        }
+
+        Venta venta = ventaMapper.toEntity(request);
+
+        Cliente cliente = clienteRepository.findById(request.getClienteId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El cliente con el ID: " + request.getClienteId() + " no existe"
+                ));
+
         venta.setCliente(cliente);
 
-        BigDecimal subtotal = BigDecimal.ZERO;
+        if (venta.getCantidadPagada() == null) {
+            venta.setCantidadPagada(BigDecimal.ZERO);
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+
         for (DetalleVenta detalle : venta.getDetalleVentas()) {
+            if (detalle.getProducto() == null || detalle.getProducto().getId() == null || detalle.getProducto().getId() <= 0) {
+                throw new IllegalArgumentException("Cada detalle debe tener un producto válido.");
+            }
+
+            if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+                throw new IllegalArgumentException("La cantidad de cada producto debe ser mayor a cero.");
+            }
 
             Producto producto = productoRepository.findById(detalle.getProducto().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no existe"));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "El producto con el ID: " + detalle.getProducto().getId() + " no existe"
+                    ));
 
             BigDecimal precioUnitario = precioRepository.findByClienteAndProducto(cliente, producto)
                     .map(Precio::getPrecio)
                     .orElse(producto.getPrecio());
 
-            BigDecimal monto = precioUnitario.multiply(BigDecimal.valueOf(detalle.getCantidad()));
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(detalle.getCantidad()));
 
             detalle.setVenta(venta);
             detalle.setProducto(producto);
             detalle.setPrecioUnitario(precioUnitario);
-            detalle.setSubtotal(monto);
+            detalle.setSubtotal(subtotal);
 
-            subtotal = subtotal.add(monto);
+            total = total.add(subtotal);
         }
 
-        venta.setTotalPagar(subtotal);
+        venta.setTotalPagar(total);
         venta.calcularTipoPago();
 
-        return  ventaRepository.save(venta);
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        return ventaMapper.toResponse(ventaGuardada);
     }
 }

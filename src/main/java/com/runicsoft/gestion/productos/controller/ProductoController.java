@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.productos.controller;
 
+import com.runicsoft.gestion.productos.dtos.request.ProductoRequest;
+import com.runicsoft.gestion.productos.dtos.response.ProductoResponse;
 import com.runicsoft.gestion.productos.model.Producto;
 import com.runicsoft.gestion.productos.service.ProductoService;
 import lombok.RequiredArgsConstructor;
@@ -18,26 +20,26 @@ public class ProductoController {
     private final ProductoService productoService;
 
     @GetMapping
-    public ResponseEntity<List<Producto>> findAll(){
-        List<Producto> productos = productoService.findAll();
+    public ResponseEntity<List<ProductoResponse>> findAll(){
+        List<ProductoResponse> productos = productoService.findAll();
         return ResponseEntity.status(HttpStatus.OK).body(productos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> findById(@PathVariable Long id){
-        Producto producto = productoService.findById(id);
+    public ResponseEntity<ProductoResponse> findById(@PathVariable Long id){
+        ProductoResponse producto = productoService.findById(id);
         return ResponseEntity.status(HttpStatus.OK).body(producto);
     }
 
     @PostMapping
-    public ResponseEntity<Producto> save(@RequestBody Producto producto){
-        Producto saved = productoService.save(producto);
+    public ResponseEntity<ProductoResponse> save(@RequestBody ProductoRequest producto){
+        ProductoResponse saved = productoService.save(producto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> update(@PathVariable Long id, @RequestBody Producto producto){
-        Producto updated = productoService.update(id, producto);
+    public ResponseEntity<ProductoResponse> update(@PathVariable Long id, @RequestBody ProductoRequest producto){
+        ProductoResponse updated = productoService.update(id, producto);
         return ResponseEntity.status(HttpStatus.OK).body(updated);
     }
 }

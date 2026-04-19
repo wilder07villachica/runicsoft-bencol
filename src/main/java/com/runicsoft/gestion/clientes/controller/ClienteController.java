@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.clientes.controller;
 
+import com.runicsoft.gestion.clientes.dtos.request.ClienteRequest;
+import com.runicsoft.gestion.clientes.dtos.response.ClienteResponse;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.clientes.service.ClienteService;
 import lombok.RequiredArgsConstructor;
@@ -18,26 +20,26 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> findAll(){
-        List<Cliente> clientes = clienteService.findAll();
+    public ResponseEntity<List<ClienteResponse>> findAll() {
+        List<ClienteResponse> clientes = clienteService.findAll();
         return ResponseEntity.status(HttpStatus.OK).body(clientes);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> findById(@PathVariable Long id){
-        Cliente cliente = clienteService.findById(id);
+    public ResponseEntity<ClienteResponse> findById(@PathVariable Long id) {
+        ClienteResponse cliente = clienteService.findById(id);
         return ResponseEntity.status(HttpStatus.OK).body(cliente);
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> save(@RequestBody Cliente cliente){
-        Cliente saved = clienteService.save(cliente);
+    public ResponseEntity<ClienteResponse> save(@RequestBody ClienteRequest cliente) {
+        ClienteResponse saved = clienteService.save(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> update(@PathVariable Long id, @RequestBody Cliente cliente){
-        Cliente updated = clienteService.update(id, cliente);
+    public ResponseEntity<ClienteResponse> update(@PathVariable Long id, @RequestBody ClienteRequest cliente) {
+        ClienteResponse updated = clienteService.update(id, cliente);
         return ResponseEntity.status(HttpStatus.OK).body(updated);
     }
 }

@@ -14,26 +14,39 @@ import java.util.List;
 @RestController
 @RequestMapping("/precios")
 @RequiredArgsConstructor
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:5173")
 public class PrecioController {
 
     private final PrecioService precioService;
 
     @GetMapping
-    public ResponseEntity<List<PrecioResponse>> findAll(){
-        List<PrecioResponse> precios = precioService.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(precios);
+    public ResponseEntity<List<PrecioResponse>> findAll() {
+        return ResponseEntity.ok(precioService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PrecioResponse> findById(@PathVariable Long id){
-        PrecioResponse precio = precioService.findById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(precio);
+    public ResponseEntity<PrecioResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(precioService.findById(id));
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<PrecioResponse>> findByClienteId(@PathVariable Long clienteId) {
+        return ResponseEntity.ok(precioService.findByClienteId(clienteId));
     }
 
     @PostMapping
-    public ResponseEntity<PrecioResponse> save(@RequestBody PrecioRequest precio){
-        PrecioResponse saved = precioService.save(precio);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<PrecioResponse> save(@RequestBody PrecioRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(precioService.save(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PrecioResponse> update(@PathVariable Long id, @RequestBody PrecioRequest request) {
+        return ResponseEntity.ok(precioService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        precioService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

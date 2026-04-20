@@ -18,8 +18,10 @@ public class ProductoMapper {
 
     public ProductoResponse toResponse(Producto producto) {
         return new ProductoResponse(
+                producto.getId(),
                 producto.getTipoProducto(),
-                producto.getPrecio()
+                producto.getPrecio(),
+                producto.getEstado()
         );
     }
 

@@ -7,10 +7,13 @@ import com.runicsoft.gestion.utils.TipoPrecio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PrecioRepository extends JpaRepository<Precio, Long> {
     boolean existsByClienteIdAndProductoIdAndTipoPrecio(Long clienteId, Long productoId, TipoPrecio tipoPrecio);
     Optional<Precio> findByClienteAndProducto(Cliente cliente, Producto producto);
+    List<Precio> findByClienteId(Long clienteId);
+    boolean existsByClienteIdAndProductoIdAndTipoPrecioAndIdNot(Long clienteId, Long productoId, TipoPrecio tipoPrecio, Long id);
 }

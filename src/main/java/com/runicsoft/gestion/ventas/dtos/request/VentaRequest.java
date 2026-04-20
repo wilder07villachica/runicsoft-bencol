@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class VentaRequest {
     private Long clienteId;
+    private Long cajaId;
     private BigDecimal cantidadPagada;
     private MetodoPago metodoPago;
     private List<DetalleVentaRequest> detalleVentas;

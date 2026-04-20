@@ -15,8 +15,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PrecioRequest {
-    private Cliente cliente;
-    private Producto producto;
+    private Long clienteId;
+    private Long productoId;
     private BigDecimal precio;
     private TipoPrecio tipoPrecio;
     private Integer cantidadMinima;

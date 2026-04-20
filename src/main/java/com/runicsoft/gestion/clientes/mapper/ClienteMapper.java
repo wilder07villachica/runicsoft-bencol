@@ -21,8 +21,11 @@ public class ClienteMapper {
 
     public ClienteResponse toResponse(Cliente cliente) {
         return new ClienteResponse(
+                cliente.getId(),
                 cliente.getNombre(),
                 cliente.getDireccion(),
+                cliente.getCorreo(),
+                cliente.getTelefono(),
                 cliente.getCategoria(),
                 cliente.getEstado()
         );

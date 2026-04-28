@@ -3,9 +3,9 @@ import Sidebar from "../components/layout/Sidebar"
 import Topbar from "../components/layout/Topbar"
 import VentaTable from "../components/ventas/VentaTable"
 import VentaInfoModal from "../components/ventas/VentaInfoModal"
-import { getClientes } from "../services/clienteService"
-import { getProductos } from "../services/productoService"
-import { getVentas, getVentaById, createVenta } from "../services/ventaService"
+import { getClientes } from "../services/ClienteService"
+import { getProductos } from "../services/ProductoService"
+import { getVentas, getVentaById, createVenta } from "../services/VentaService"
 import { useNavigate } from "react-router-dom"
 
 export default function VentasPage() {

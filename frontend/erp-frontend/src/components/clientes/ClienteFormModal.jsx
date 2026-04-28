@@ -89,7 +89,6 @@ export default function ClienteFormModal({
               onChange={handleChange}
               placeholder="Correo"
               className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
-              required
             />
 
             <input
@@ -98,6 +97,7 @@ export default function ClienteFormModal({
               onChange={handleChange}
               placeholder="Teléfono"
               className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
+              required
             />
 
             <select

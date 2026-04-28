@@ -3,6 +3,8 @@ package com.runicsoft.gestion.finanzas.cuentas.service;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
 import com.runicsoft.gestion.finanzas.cajas.repository.CajaRepository;
 import com.runicsoft.gestion.finanzas.cuentas.dtos.request.AbonoCuentaPorCobrarRequest;
+import com.runicsoft.gestion.finanzas.cuentas.dtos.request.ActualizarCuentaPorCobrarRequest;
+import com.runicsoft.gestion.finanzas.cuentas.dtos.response.CuentaPorCobrarResponse;
 import com.runicsoft.gestion.finanzas.cuentas.model.AbonoCuentaPorCobrar;
 import com.runicsoft.gestion.finanzas.cuentas.model.CuentaPorCobrar;
 import com.runicsoft.gestion.finanzas.cuentas.repository.AbonoCuentaPorCobrarRepository;
@@ -12,11 +14,14 @@ import com.runicsoft.gestion.finanzas.movimientos.repository.MovimientoCajaRepos
 import com.runicsoft.gestion.finanzas.shared.EstadoCuentaCobrar;
 import com.runicsoft.gestion.finanzas.shared.OrigenMovimientoCaja;
 import com.runicsoft.gestion.finanzas.shared.TipoMovimientoCaja;
+import com.runicsoft.gestion.ventas.model.Venta;
+import com.runicsoft.gestion.ventas.repository.VentaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,62 @@ public class CuentaPorCobrarService {
     private final AbonoCuentaPorCobrarRepository abonoRepository;
     private final CajaRepository cajaRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
+    private final VentaRepository ventaRepository;
+
+    @Transactional(readOnly = true)
+    public List<CuentaPorCobrarResponse> listar() {
+        return cuentaPorCobrarRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CuentaPorCobrarResponse> listarPorCliente(Long clienteId) {
+        return cuentaPorCobrarRepository.findByClienteId(clienteId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CuentaPorCobrarResponse> listarPorEstado(EstadoCuentaCobrar estado) {
+        return cuentaPorCobrarRepository.findByEstado(estado)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CuentaPorCobrarResponse buscarPorId(Long cuentaId) {
+        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findById(cuentaId)
+                .orElseThrow(() -> new IllegalArgumentException("La cuenta por cobrar no existe."));
+
+        return toResponse(cuenta);
+    }
+
+    @Transactional
+    public CuentaPorCobrarResponse actualizar(Long cuentaId, ActualizarCuentaPorCobrarRequest request) {
+        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findById(cuentaId)
+                .orElseThrow(() -> new IllegalArgumentException("La cuenta por cobrar no existe."));
+
+        if (request.getFechaVencimiento() != null) {
+            cuenta.setFechaVencimiento(request.getFechaVencimiento());
+        }
+
+        if (request.getEstado() != null) {
+            if (cuenta.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0
+                    && request.getEstado() == EstadoCuentaCobrar.PAGADA) {
+                throw new IllegalArgumentException("No puedes marcar como pagada una cuenta con saldo pendiente.");
+            }
+
+            cuenta.setEstado(request.getEstado());
+        }
+
+        CuentaPorCobrar cuentaActualizada = cuentaPorCobrarRepository.save(cuenta);
+
+        return toResponse(cuentaActualizada);
+    }
 
     @Transactional
     public void registrarAbono(Long cuentaId, AbonoCuentaPorCobrarRequest request) {
@@ -73,6 +134,16 @@ public class CuentaPorCobrarService {
         cuenta.setMontoPagado(nuevoMontoPagado);
         cuenta.setSaldoPendiente(nuevoSaldo);
 
+        Venta venta = cuenta.getVenta();
+        if (venta != null) {
+            BigDecimal cantidadPagadaActual = venta.getCantidadPagada() != null
+                    ? venta.getCantidadPagada()
+                    : BigDecimal.ZERO;
+            venta.setCantidadPagada(cantidadPagadaActual.add(request.getMonto()));
+            venta.calcularTipoPago();
+            ventaRepository.save(venta);
+        }
+
         if (nuevoSaldo.compareTo(BigDecimal.ZERO) == 0) {
             cuenta.setEstado(EstadoCuentaCobrar.PAGADA);
         } else {
@@ -80,5 +151,20 @@ public class CuentaPorCobrarService {
         }
 
         cuentaPorCobrarRepository.save(cuenta);
+    }
+
+    private CuentaPorCobrarResponse toResponse(CuentaPorCobrar cuenta) {
+        return CuentaPorCobrarResponse.builder()
+                .id(cuenta.getId())
+                .ventaId(cuenta.getVenta() != null ? cuenta.getVenta().getId() : null)
+                .clienteId(cuenta.getCliente() != null ? cuenta.getCliente().getId() : null)
+                .clienteNombre(cuenta.getCliente() != null ? cuenta.getCliente().getNombre() : null)
+                .montoTotal(cuenta.getMontoTotal())
+                .montoPagado(cuenta.getMontoPagado())
+                .saldoPendiente(cuenta.getSaldoPendiente())
+                .estado(cuenta.getEstado())
+                .fechaVencimiento(cuenta.getFechaVencimiento())
+                .fechaCreacion(cuenta.getFechaCreacion())
+                .build();
     }
 }

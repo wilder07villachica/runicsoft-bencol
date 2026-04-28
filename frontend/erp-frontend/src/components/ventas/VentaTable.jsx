@@ -17,9 +17,38 @@ const estadoVentaLabels = {
   REPROGRAMADO: "Reprogramado",
 }
 
+const estadoCobroLabels = {
+  PENDIENTE: "Pendiente",
+  PARCIAL: "Parcial",
+  PAGADA: "Pagada",
+}
+
 function formatFecha(fecha) {
   if (!fecha) return "-"
   return new Date(fecha).toLocaleString()
+}
+
+function EstadoCobroBadge({ estado }) {
+  if (!estado) {
+    return (
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        Contado
+      </span>
+    )
+  }
+
+  const className =
+    estado === "PAGADA"
+      ? "bg-emerald-100 text-emerald-700"
+      : estado === "PARCIAL"
+      ? "bg-amber-100 text-amber-700"
+      : "bg-red-100 text-red-700"
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
+      {estadoCobroLabels[estado] || estado}
+    </span>
+  )
 }
 
 export default function VentaTable({ ventas, onInfo }) {
@@ -33,7 +62,7 @@ export default function VentaTable({ ventas, onInfo }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] text-sm">
+        <table className="w-full min-w-[1150px] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-500">
               <th className="pb-3">ID</th>
@@ -42,8 +71,10 @@ export default function VentaTable({ ventas, onInfo }) {
               <th className="pb-3">Método</th>
               <th className="pb-3">Tipo pago</th>
               <th className="pb-3">Pagado</th>
+              <th className="pb-3">Saldo</th>
               <th className="pb-3">Total</th>
-              <th className="pb-3">Estado</th>
+              <th className="pb-3">Cobro</th>
+              <th className="pb-3">Estado venta</th>
               <th className="pb-3">Acciones</th>
             </tr>
           </thead>
@@ -55,11 +86,17 @@ export default function VentaTable({ ventas, onInfo }) {
                 className="border-b border-slate-100"
               >
                 <td className="py-4 font-medium text-slate-700">#{venta.id}</td>
+
                 <td className="py-4 text-slate-700">{venta.nombreCliente}</td>
-                <td className="py-4 text-slate-500">{formatFecha(venta.fechaCreacion)}</td>
+
+                <td className="py-4 text-slate-500">
+                  {formatFecha(venta.fechaCreacion)}
+                </td>
+
                 <td className="py-4 text-slate-500">
                   {metodoPagoLabels[venta.metodoPago] || venta.metodoPago}
                 </td>
+
                 <td className="py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -73,13 +110,27 @@ export default function VentaTable({ ventas, onInfo }) {
                     {tipoPagoLabels[venta.tipoPago] || venta.tipoPago}
                   </span>
                 </td>
-                <td className="py-4 text-slate-700">S/ {Number(venta.cantidadPagada ?? 0).toFixed(2)}</td>
+
+                <td className="py-4 text-slate-700">
+                  S/ {Number(venta.cantidadPagada ?? 0).toFixed(2)}
+                </td>
+
+                <td className="py-4 font-semibold text-red-600">
+                  S/ {Number(venta.saldoPendiente ?? 0).toFixed(2)}
+                </td>
+
                 <td className="py-4 font-semibold text-slate-900">
                   S/ {Number(venta.totalPagar ?? 0).toFixed(2)}
                 </td>
+
+                <td className="py-4">
+                  <EstadoCobroBadge estado={venta.estadoCobro} />
+                </td>
+
                 <td className="py-4 text-slate-500">
                   {estadoVentaLabels[venta.estadoVenta] || venta.estadoVenta}
                 </td>
+
                 <td className="py-4">
                   <button
                     onClick={() => onInfo(venta)}

@@ -6,6 +6,7 @@ import ClientePreciosPage from "./pages/ClientePreciosPage"
 import VentasPage from "./pages/VentasPage"
 import NuevaVentaPage from "./pages/NuevaVentaPage"
 import CajaPage from "./pages/CajaPage"
+import CuentasPorCobrarPage from "./pages/CuentasPorCobrarPage"
 
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/productos" element={<ProductosPage />} />
       <Route path="/ventas" element={<VentasPage />} />
       <Route path="/ventas/nueva" element={<NuevaVentaPage />} />
+      <Route path="/cuentas-por-cobrar" element={<CuentasPorCobrarPage />} />
       <Route path="/caja" element={<CajaPage />} />
     </Routes>
   )

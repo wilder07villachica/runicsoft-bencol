@@ -1,5 +1,6 @@
 package com.runicsoft.gestion.ventas.dtos.response;
 
+import com.runicsoft.gestion.finanzas.shared.EstadoCuentaCobrar;
 import com.runicsoft.gestion.utils.EstadoVenta;
 import com.runicsoft.gestion.utils.MetodoPago;
 import com.runicsoft.gestion.utils.TipoPago;
@@ -25,4 +26,7 @@ public class VentaResumenResponse {
     private MetodoPago metodoPago;
     private LocalDateTime fechaCreacion;
     private EstadoVenta estadoVenta;
+
+    private BigDecimal saldoPendiente;
+    private EstadoCuentaCobrar estadoCobro;
 }

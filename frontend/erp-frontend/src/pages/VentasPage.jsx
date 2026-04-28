@@ -43,6 +43,18 @@ export default function VentasPage() {
     cargarTodo()
   }, [])
 
+  useEffect(() => {
+    const handleFocus = () => {
+      cargarTodo()
+    }
+
+    window.addEventListener("focus", handleFocus)
+
+    return () => {
+      window.removeEventListener("focus", handleFocus)
+    }
+  }, [])
+
   const handleNueva = () => {
     setOpenModal(true)
   }

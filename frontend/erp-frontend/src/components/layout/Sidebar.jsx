@@ -3,6 +3,7 @@ import {
   Users,
   Boxes,
   ShoppingCart,
+  Landmark,
   Wallet,
   Settings,
 } from "lucide-react"
@@ -13,6 +14,10 @@ const menuItems = [
   { label: "Clientes", icon: Users, to: "/clientes" },
   { label: "Productos", icon: Boxes, to: "/productos" },
   { label: "Ventas", icon: ShoppingCart, to: "/ventas" },
+
+  // Finanzas
+  { label: "Finanzas", icon: Landmark, to: "/cuentas-por-cobrar" },
+
   { label: "Caja", icon: Wallet, to: "/caja" },
   { label: "Configuración", icon: Settings, to: "/configuracion", disabled: true },
 ]
@@ -22,7 +27,7 @@ export default function Sidebar() {
     <aside className="hidden lg:flex w-72 min-h-screen flex-col bg-slate-950 text-white">
       <div className="px-6 py-6 border-b border-white/10">
         <h1 className="text-3xl font-bold tracking-tight">ERP</h1>
-        <p className="text-sm text-slate-400">Clientes · Productos · Ventas</p>
+        <p className="text-sm text-slate-400">Clientes · Productos · Ventas · Finanzas</p>
       </div>
 
       <nav className="px-4 py-6 space-y-2 flex-1">

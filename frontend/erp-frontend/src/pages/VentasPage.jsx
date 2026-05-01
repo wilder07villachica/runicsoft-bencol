@@ -5,7 +5,7 @@ import VentaTable from "../components/ventas/VentaTable"
 import VentaInfoModal from "../components/ventas/VentaInfoModal"
 import { getClientes } from "../services/clienteService"
 import { getProductos } from "../services/productoService"
-import { getVentas, getVentaById, createVenta } from "../services/ventaService"
+import { getVentas, getVentaById, createVenta, marcarVentaComoEntregada } from "../services/ventaService"
 import { useNavigate } from "react-router-dom"
 
 export default function VentasPage() {
@@ -89,6 +89,18 @@ export default function VentasPage() {
     }
   }
 
+  const handleEntregar = async (venta) => {
+    if (!confirm(`¿Marcar la venta #${venta.id} como entregada?`)) return
+
+    try {
+      await marcarVentaComoEntregada(venta.id)
+      await cargarTodo()
+    } catch (err) {
+      console.error(err)
+      alert("No se pudo marcar la venta como entregada")
+    }
+  }
+
   const navigate = useNavigate()
 
   return (
@@ -127,7 +139,7 @@ export default function VentasPage() {
                 {error}
               </div>
             ) : (
-              <VentaTable ventas={ventas} onInfo={handleInfo} />
+              <VentaTable ventas={ventas} onInfo={handleInfo} onEntregar={handleEntregar} />
             )}
           </section>
         </main>

@@ -41,8 +41,8 @@ function EstadoCobroBadge({ estado }) {
     estado === "PAGADA"
       ? "bg-emerald-100 text-emerald-700"
       : estado === "PARCIAL"
-      ? "bg-amber-100 text-amber-700"
-      : "bg-red-100 text-red-700"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-red-100 text-red-700"
 
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
@@ -51,7 +51,7 @@ function EstadoCobroBadge({ estado }) {
   )
 }
 
-export default function VentaTable({ ventas, onInfo }) {
+export default function VentaTable({ ventas, onInfo, onEntregar }) {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
       <div className="mb-5">
@@ -99,13 +99,12 @@ export default function VentaTable({ ventas, onInfo }) {
 
                 <td className="py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      venta.tipoPago === "CANCELADO"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : venta.tipoPago === "ABONO"
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${venta.tipoPago === "CANCELADO"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : venta.tipoPago === "ABONO"
                         ? "bg-amber-100 text-amber-700"
                         : "bg-slate-200 text-slate-700"
-                    }`}
+                      }`}
                   >
                     {tipoPagoLabels[venta.tipoPago] || venta.tipoPago}
                   </span>
@@ -132,12 +131,23 @@ export default function VentaTable({ ventas, onInfo }) {
                 </td>
 
                 <td className="py-4">
-                  <button
-                    onClick={() => onInfo(venta)}
-                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                  >
-                    Info
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onInfo(venta)}
+                      className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                    >
+                      Info
+                    </button>
+
+                    {venta.estadoVenta !== "ENTREGADO" && (
+                      <button
+                        onClick={() => onEntregar(venta)}
+                        className="rounded-xl bg-emerald-600 px-4 py-2 text-white font-semibold hover:bg-emerald-700"
+                      >
+                        Entregar
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

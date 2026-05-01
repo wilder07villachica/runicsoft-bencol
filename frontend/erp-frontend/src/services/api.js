@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "https://runicsoft-bencol-production.up.railway.app",
+  baseURL: "http://localhost:8000",
 })
 
 export default api

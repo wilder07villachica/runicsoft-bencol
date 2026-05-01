@@ -37,4 +37,10 @@ public class VentaController {
         VentaResponse saved = ventaService.save(venta);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
+
+    @PutMapping("/{id}/entregar")
+    public ResponseEntity<VentaResponse> marcarComoEntregada(@PathVariable Long id) {
+        VentaResponse venta = ventaService.marcarComoEntregada(id);
+        return ResponseEntity.ok(venta);
+    }
 }

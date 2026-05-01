@@ -14,3 +14,8 @@ export const createVenta = async (payload) => {
   const response = await api.post("/ventas", payload)
   return response.data
 }
+
+export const marcarVentaComoEntregada = async (id) => {
+  const response = await api.put(`/ventas/${id}/entregar`)
+  return response.data
+}

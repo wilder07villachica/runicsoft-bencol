@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { getCajasActivas } from "../services/CajaService"
 
 import Sidebar from "../components/layout/Sidebar"
 import Topbar from "../components/layout/Topbar"
@@ -14,6 +15,7 @@ export default function CuentasPorCobrarPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const [cajas, setCajas] = useState([])
   const [cuentaSeleccionada, setCuentaSeleccionada] = useState(null)
   const [montoAbono, setMontoAbono] = useState("")
   const [cajaId, setCajaId] = useState("")
@@ -39,9 +41,23 @@ export default function CuentasPorCobrarPage() {
     }
   }
 
+  const cargarCajas = async () => {
+    try {
+      const data = await getCajasActivas()
+      setCajas(data || [])
+    } catch (error) {
+      console.error(error)
+      setCajas([])
+    }
+  }
+
   useEffect(() => {
     cargarCuentas()
   }, [estado])
+
+  useEffect(() => {
+    cargarCajas()
+  }, [])
 
   const resumen = useMemo(() => {
     const pendiente = cuentas.reduce(
@@ -82,7 +98,7 @@ export default function CuentasPorCobrarPage() {
     if (!cuentaSeleccionada) return
 
     if (!cajaId) {
-      alert("Seleccione o ingrese una caja")
+      alert("Seleccione una caja")
       return
     }
 
@@ -305,13 +321,23 @@ export default function CuentasPorCobrarPage() {
                 </div>
 
                 <div className="mt-5 space-y-4">
-                  <input
-                    type="number"
-                    placeholder="Caja ID"
+                  <select
                     value={cajaId}
                     onChange={(e) => setCajaId(e.target.value)}
                     className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
-                  />
+                  >
+                    <option value="">Seleccione una caja</option>
+
+                    {cajas.map((caja) => (
+                      <option key={caja.id} value={caja.id}>
+                        {caja.nombre || caja.descripcion || `Caja #${caja.id}`}
+                        {caja.principal ? " - Principal" : ""}
+                        {caja.saldoActual !== undefined
+                          ? ` - S/ ${Number(caja.saldoActual || 0).toFixed(2)}`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
 
                   <input
                     type="number"

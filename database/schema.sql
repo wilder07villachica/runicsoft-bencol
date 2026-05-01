@@ -11,7 +11,7 @@ create table clientes
     id        bigint primary key not null auto_increment,
     nombre    varchar(250)       not null,
     direccion varchar(250)       not null,
-    correo    varchar(250)       not null unique,
+    correo    varchar(250)       null unique,
     telefono  varchar(20)        not null,
     categoria enum('DISTRIBUIDOR', 'CONSUMIDOR_FINAL', 'CORPORATIVO') default 'CONSUMIDOR_FINAL',
     estado    enum('ACTIVO', 'INACTIVO') default 'ACTIVO'

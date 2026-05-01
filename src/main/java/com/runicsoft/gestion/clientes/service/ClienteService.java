@@ -39,9 +39,11 @@ public class ClienteService {
 
     @Transactional
     public ClienteResponse save(ClienteRequest request) {
+        if (request.getCorreo() != null && request.getCorreo().isBlank()) {
+            request.setCorreo(null);
+        }
         String correo = request.getCorreo();
-        if (correo != null && !correo.isBlank()
-                && clienteRepository.existsByCorreo(correo)) {
+        if (correo != null && clienteRepository.existsByCorreo(correo)) {
             throw new IllegalArgumentException("El correo registrado ya está en uso.");
         }
         Cliente cliente = mapper.toEntity(request);
@@ -51,16 +53,15 @@ public class ClienteService {
 
     @Transactional
     public ClienteResponse update(Long id, ClienteRequest request) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("ID inválido");
-        }
         Cliente clienteUpdate = clienteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "El registro con el ID: " + id + " no existe"
                 ));
+        if (request.getCorreo() != null && request.getCorreo().isBlank()) {
+            request.setCorreo(null);
+        }
         String correo = request.getCorreo();
-        if (correo != null && !correo.isBlank()
-                && clienteRepository.existsByCorreoAndIdNot(correo, id)) {
+        if (correo != null && clienteRepository.existsByCorreoAndIdNot(correo, id)) {
             throw new IllegalArgumentException("El correo registrado ya está en uso.");
         }
         mapper.updateEntityFromRequest(clienteUpdate, request);

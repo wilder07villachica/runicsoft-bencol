@@ -61,15 +61,17 @@ public class MovimientoCajaService {
 
     @Transactional
     public MovimientoCajaResponse registrarIngresoManual(MovimientoCajaRequest request) {
-        validarRequestBase(request);
-
-        if (request.getTipo() != TipoMovimientoCaja.INGRESO) {
-            throw new IllegalArgumentException("El tipo de movimiento debe ser INGRESO.");
+        if (request == null) {
+            throw new IllegalArgumentException("La solicitud no puede ser nula.");
         }
+
+        request.setTipo(TipoMovimientoCaja.INGRESO);
 
         if (request.getOrigen() == null) {
             request.setOrigen(OrigenMovimientoCaja.INGRESO_MANUAL);
         }
+
+        validarRequestBase(request);
 
         if (request.getOrigen() != OrigenMovimientoCaja.INGRESO_MANUAL
                 && request.getOrigen() != OrigenMovimientoCaja.AJUSTE
@@ -108,15 +110,17 @@ public class MovimientoCajaService {
 
     @Transactional
     public MovimientoCajaResponse registrarEgresoManual(MovimientoCajaRequest request) {
-        validarRequestBase(request);
-
-        if (request.getTipo() != TipoMovimientoCaja.EGRESO) {
-            throw new IllegalArgumentException("El tipo de movimiento debe ser EGRESO.");
+        if (request == null) {
+            throw new IllegalArgumentException("La solicitud no puede ser nula.");
         }
+
+        request.setTipo(TipoMovimientoCaja.EGRESO);
 
         if (request.getOrigen() == null) {
             request.setOrigen(OrigenMovimientoCaja.EGRESO_MANUAL);
         }
+
+        validarRequestBase(request);
 
         if (request.getOrigen() != OrigenMovimientoCaja.EGRESO_MANUAL
                 && request.getOrigen() != OrigenMovimientoCaja.AJUSTE
@@ -159,10 +163,6 @@ public class MovimientoCajaService {
     }
 
     private void validarRequestBase(MovimientoCajaRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("La solicitud no puede ser nula.");
-        }
-
         if (request.getCajaId() == null || request.getCajaId() <= 0) {
             throw new IllegalArgumentException("Debe proporcionar una caja válida.");
         }

@@ -39,36 +39,44 @@ export default function CajaPage() {
   const [cajaPreseleccionada, setCajaPreseleccionada] = useState(null)
 
   const cargarCajas = async () => {
-    const cajasData = await getCajas()
-    setCajas(cajasData)
+    try {
+      const cajasData = await getCajas()
+      setCajas(cajasData || [])
+    } catch (err) {
+      console.error("Error cargando cajas:", err)
+      setCajas([])
+    }
 
     try {
       const principalData = await getCajaPrincipal()
       setPrincipal(principalData)
-    } catch {
+    } catch (err) {
+      console.warn("No hay caja principal todavía")
       setPrincipal(null)
     }
   }
 
   const cargarMovimientos = async (cajaId = "") => {
-    const movimientosData = cajaId
-      ? await getMovimientosByCaja(cajaId)
-      : await getMovimientosCaja()
+    try {
+      const movimientosData = cajaId
+        ? await getMovimientosByCaja(cajaId)
+        : await getMovimientosCaja()
 
-    setMovimientos(movimientosData)
+      setMovimientos(movimientosData || [])
+    } catch (err) {
+      console.error("Error cargando movimientos:", err)
+      setMovimientos([])
+    }
   }
 
   const cargarTodo = async (cajaId = filtroCajaId) => {
-    try {
-      setLoading(true)
-      setError("")
-      await Promise.all([cargarCajas(), cargarMovimientos(cajaId)])
-    } catch (err) {
-      console.error(err)
-      setError("No se pudo cargar la información de caja")
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    setError("")
+
+    await cargarCajas()
+    await cargarMovimientos(cajaId)
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -96,9 +104,14 @@ export default function CajaPage() {
     }
   }
 
+  // 🔥 FIX AQUI
   const handleIngreso = async (payload) => {
     try {
-      await registrarIngresoManual(payload)
+      await registrarIngresoManual({
+        ...payload,
+        tipoMovimiento: "INGRESO",
+      })
+
       setOpenIngresoModal(false)
       await cargarTodo(filtroCajaId)
     } catch (err) {
@@ -111,9 +124,14 @@ export default function CajaPage() {
     }
   }
 
+  // 🔥 FIX AQUI
   const handleEgreso = async (payload) => {
     try {
-      await registrarEgresoManual(payload)
+      await registrarEgresoManual({
+        ...payload,
+        tipoMovimiento: "EGRESO",
+      })
+
       setOpenEgresoModal(false)
       await cargarTodo(filtroCajaId)
     } catch (err) {
@@ -132,11 +150,7 @@ export default function CajaPage() {
       await cargarTodo()
     } catch (err) {
       console.error(err)
-      alert(
-        typeof err?.response?.data === "string"
-          ? err.response.data
-          : "No se pudo activar la caja"
-      )
+      alert("No se pudo activar la caja")
     }
   }
 
@@ -146,11 +160,7 @@ export default function CajaPage() {
       await cargarTodo()
     } catch (err) {
       console.error(err)
-      alert(
-        typeof err?.response?.data === "string"
-          ? err.response.data
-          : "No se pudo desactivar la caja"
-      )
+      alert("No se pudo desactivar la caja")
     }
   }
 
@@ -160,11 +170,7 @@ export default function CajaPage() {
       await cargarTodo()
     } catch (err) {
       console.error(err)
-      alert(
-        typeof err?.response?.data === "string"
-          ? err.response.data
-          : "No se pudo marcar como principal"
-      )
+      alert("No se pudo marcar como principal")
     }
   }
 
@@ -190,108 +196,55 @@ export default function CajaPage() {
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="min-w-0">
+              <div>
                 <h2 className="text-2xl font-bold text-slate-900">
                   Gestión de caja
                 </h2>
-                <p className="mt-1 text-slate-500">
-                  Administra cajas y movimientos financieros
-                </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    setCajaEditando(null)
-                    setOpenCajaModal(true)
-                  }}
-                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-3 font-medium text-white shadow-lg"
-                >
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setOpenCajaModal(true)}
+                  className="bg-violet-600 text-white px-5 py-3 rounded-2xl">
                   Nueva caja
                 </button>
 
-                <button
-                  onClick={() => setOpenIngresoModal(true)}
-                  className="rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white shadow-lg"
-                >
+                <button type="button" onClick={() => setOpenIngresoModal(true)}
+                  className="bg-emerald-600 text-white px-5 py-3 rounded-2xl">
                   Ingreso manual
                 </button>
 
-                <button
-                  onClick={() => setOpenEgresoModal(true)}
-                  className="rounded-2xl bg-red-600 px-5 py-3 font-medium text-white shadow-lg"
-                >
+                <button type="button" onClick={() => setOpenEgresoModal(true)}
+                  className="bg-red-600 text-white px-5 py-3 rounded-2xl">
                   Egreso manual
                 </button>
               </div>
             </div>
 
             {loading ? (
-              <p className="py-8 text-center text-slate-500">
-                Cargando caja...
-              </p>
-            ) : error ? (
-              <p className="py-8 text-center text-red-500">{error}</p>
+              <p>Cargando...</p>
             ) : (
               <>
-                <div className="mb-6">
-                  <CajaResumenCards cajas={cajas} principal={principal} />
-                </div>
-
-                <div className="mb-8 w-full overflow-x-auto">
-                  <CajaTable
-                    cajas={cajas}
-                    principal={principal}
-                    onEditar={(caja) => {
-                      setCajaEditando(caja)
-                      setOpenCajaModal(true)
-                    }}
-                    onActivar={handleActivar}
-                    onDesactivar={handleDesactivar}
-                    onPrincipal={handlePrincipal}
-                    onVerMovimientos={handleVerMovimientosCaja}
-                  />
-                </div>
-
-                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Movimientos de caja
-                  </h3>
-
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-600">
-                      Filtrar movimientos por caja:
-                    </label>
-
-                    <select
-                      value={filtroCajaId}
-                      onChange={handleFiltrarMovimientos}
-                      className="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
-                    >
-                      <option value="">Todas las cajas</option>
-                      {cajas.map((caja) => (
-                        <option key={caja.id} value={caja.id}>
-                          {caja.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="w-full overflow-x-auto">
-                  <MovimientoCajaTable movimientos={movimientos} />
-                </div>
+                <CajaResumenCards cajas={cajas} principal={principal} />
+                <CajaTable
+                  cajas={cajas}
+                  principal={principal}
+                  onEditar={(c) => { setCajaEditando(c); setOpenCajaModal(true) }}
+                  onActivar={handleActivar}
+                  onDesactivar={handleDesactivar}
+                  onPrincipal={handlePrincipal}
+                  onVerMovimientos={handleVerMovimientosCaja}
+                />
+                <MovimientoCajaTable movimientos={movimientos} />
               </>
             )}
+
           </div>
 
           {openCajaModal && (
             <CajaFormModal
-              onClose={() => {
-                setOpenCajaModal(false)
-                setCajaEditando(null)
-              }}
+              onClose={() => setOpenCajaModal(false)}
               onSubmit={handleGuardarCaja}
               cajaEditando={cajaEditando}
             />
@@ -314,6 +267,7 @@ export default function CajaPage() {
               cajaPreseleccionada={cajaPreseleccionada}
             />
           )}
+
         </main>
       </div>
     </div>

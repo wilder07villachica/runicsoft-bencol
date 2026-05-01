@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+
 import Sidebar from "../components/layout/Sidebar"
 import Topbar from "../components/layout/Topbar"
 import {
@@ -29,7 +30,7 @@ export default function CuentasPorCobrarPage() {
         estado: estado || undefined,
       })
 
-      setCuentas(data)
+      setCuentas(data || [])
     } catch (error) {
       console.error(error)
       setError("No se pudo cargar las cuentas por cobrar")
@@ -43,8 +44,8 @@ export default function CuentasPorCobrarPage() {
   }, [estado])
 
   const resumen = useMemo(() => {
-    const total = cuentas.reduce(
-      (acc, item) => acc + Number(item.montoTotal || 0),
+    const pendiente = cuentas.reduce(
+      (acc, item) => acc + Number(item.saldoPendiente || 0),
       0
     )
 
@@ -53,18 +54,19 @@ export default function CuentasPorCobrarPage() {
       0
     )
 
-    const pendiente = cuentas.reduce(
-      (acc, item) => acc + Number(item.saldoPendiente || 0),
-      0
-    )
-
     const morosos = cuentas.filter((item) => {
       if (!item.fechaVencimiento) return false
       if (item.estado === "PAGADA") return false
+
       return new Date(item.fechaVencimiento) < new Date()
     }).length
 
-    return { total, pagado, pendiente, morosos }
+    return {
+      total: pendiente,
+      pagado,
+      pendiente,
+      morosos,
+    }
   }, [cuentas])
 
   const abrirAbono = (cuenta) => {
@@ -134,8 +136,10 @@ export default function CuentasPorCobrarPage() {
                 <h2 className="text-2xl font-bold text-slate-900">
                   Cuentas por cobrar
                 </h2>
+
                 <p className="mt-1 text-slate-500">
-                  Gestión financiera de ventas pendientes, abonos y clientes morosos.
+                  Gestión financiera de ventas pendientes, abonos y clientes
+                  morosos.
                 </p>
               </div>
 
@@ -152,7 +156,7 @@ export default function CuentasPorCobrarPage() {
             </div>
 
             <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-              <ResumenCard titulo="Total" valor={resumen.total} />
+              <ResumenCard titulo="Por cobrar" valor={resumen.total} />
               <ResumenCard titulo="Pagado" valor={resumen.pagado} />
               <ResumenCard titulo="Pendiente" valor={resumen.pendiente} />
               <ResumenCard titulo="Morosos" valor={resumen.morosos} simple />
@@ -171,7 +175,7 @@ export default function CuentasPorCobrarPage() {
                     <tr>
                       <th className="px-4 py-3">Venta</th>
                       <th className="px-4 py-3">Cliente</th>
-                      <th className="px-4 py-3">Total</th>
+                      <th className="px-4 py-3">Total venta</th>
                       <th className="px-4 py-3">Pagado</th>
                       <th className="px-4 py-3">Pendiente</th>
                       <th className="px-4 py-3">Vencimiento</th>
@@ -212,15 +216,16 @@ export default function CuentasPorCobrarPage() {
                             </td>
 
                             <td className="px-4 py-4 font-semibold text-slate-900">
-                              S/ {Number(cuenta.montoTotal).toFixed(2)}
+                              S/ {Number(cuenta.montoTotal || 0).toFixed(2)}
                             </td>
 
                             <td className="px-4 py-4 text-slate-700">
-                              S/ {Number(cuenta.montoPagado).toFixed(2)}
+                              S/ {Number(cuenta.montoPagado || 0).toFixed(2)}
                             </td>
 
                             <td className="px-4 py-4 font-bold text-red-500">
-                              S/ {Number(cuenta.saldoPendiente).toFixed(2)}
+                              S/{" "}
+                              {Number(cuenta.saldoPendiente || 0).toFixed(2)}
                             </td>
 
                             <td className="px-4 py-4 text-slate-500">
@@ -247,6 +252,7 @@ export default function CuentasPorCobrarPage() {
                               <div className="flex gap-2">
                                 {cuenta.estado !== "PAGADA" && (
                                   <button
+                                    type="button"
                                     onClick={() => abrirAbono(cuenta)}
                                     className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
                                   >
@@ -254,9 +260,10 @@ export default function CuentasPorCobrarPage() {
                                   </button>
                                 )}
 
-                                {Number(cuenta.saldoPendiente) <= 0 &&
+                                {Number(cuenta.saldoPendiente || 0) <= 0 &&
                                   cuenta.estado !== "PAGADA" && (
                                     <button
+                                      type="button"
                                       onClick={() => marcarPagada(cuenta)}
                                       className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
                                     >
@@ -276,7 +283,7 @@ export default function CuentasPorCobrarPage() {
           </div>
 
           {cuentaSeleccionada && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
               <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
                 <h2 className="text-xl font-bold text-slate-900">
                   Registrar abono
@@ -290,7 +297,10 @@ export default function CuentasPorCobrarPage() {
                 <div className="mt-4 rounded-2xl bg-slate-50 p-4">
                   <p className="text-sm text-slate-500">Saldo pendiente</p>
                   <p className="text-2xl font-bold text-red-500">
-                    S/ {Number(cuentaSeleccionada.saldoPendiente).toFixed(2)}
+                    S/{" "}
+                    {Number(
+                      cuentaSeleccionada.saldoPendiente || 0
+                    ).toFixed(2)}
                   </p>
                 </div>
 
@@ -317,10 +327,8 @@ export default function CuentasPorCobrarPage() {
                     className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
                   >
                     <option value="EFECTIVO">Efectivo</option>
-                    <option value="YAPE">Yape</option>
-                    <option value="PLIN">Plin</option>
+                    <option value="YAPE_PLIN">Yape / Plin</option>
                     <option value="TRANSFERENCIA">Transferencia</option>
-                    <option value="TARJETA">Tarjeta</option>
                   </select>
 
                   <input
@@ -340,6 +348,7 @@ export default function CuentasPorCobrarPage() {
 
                   <div className="flex justify-end gap-2 pt-2">
                     <button
+                      type="button"
                       onClick={() => setCuentaSeleccionada(null)}
                       className="rounded-2xl border border-slate-200 px-5 py-3 font-medium text-slate-700 hover:bg-slate-50"
                     >
@@ -347,6 +356,7 @@ export default function CuentasPorCobrarPage() {
                     </button>
 
                     <button
+                      type="button"
                       onClick={registrarAbono}
                       className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-3 font-medium text-white shadow-lg"
                     >
@@ -368,7 +378,7 @@ function ResumenCard({ titulo, valor, simple = false }) {
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <p className="text-sm text-slate-500">{titulo}</p>
       <h3 className="mt-2 text-2xl font-bold text-slate-900">
-        {simple ? valor : `S/ ${Number(valor).toFixed(2)}`}
+        {simple ? valor : `S/ ${Number(valor || 0).toFixed(2)}`}
       </h3>
     </div>
   )

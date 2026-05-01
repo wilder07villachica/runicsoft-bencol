@@ -41,11 +41,18 @@ export default function CajaTable({
           <tbody>
             {cajas.map((caja) => (
               <tr key={caja.id} className="border-b border-slate-100">
-                <td className="py-4 font-medium text-slate-800">{caja.nombre}</td>
-                <td className="py-4 text-slate-500">{caja.descripcion || "-"}</td>
+                <td className="py-4 font-medium text-slate-800">
+                  {caja.nombre}
+                </td>
+
+                <td className="py-4 text-slate-500">
+                  {caja.descripcion || "-"}
+                </td>
+
                 <td className="py-4 font-semibold text-slate-900">
                   {formatMoney(caja.saldoActual)}
                 </td>
+
                 <td className="py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -57,6 +64,7 @@ export default function CajaTable({
                     {caja.activa ? "Activa" : "Inactiva"}
                   </span>
                 </td>
+
                 <td className="py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -68,10 +76,15 @@ export default function CajaTable({
                     {caja.principal ? "Sí" : "No"}
                   </span>
                 </td>
-                <td className="py-4 text-slate-500">{formatFecha(caja.fechaCreacion)}</td>
+
+                <td className="py-4 text-slate-500">
+                  {formatFecha(caja.fechaCreacion)}
+                </td>
+
                 <td className="py-4">
                   <div className="flex flex-wrap gap-2">
                     <button
+                      type="button"
                       onClick={() => onEdit(caja)}
                       className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                     >
@@ -80,11 +93,12 @@ export default function CajaTable({
 
                     {caja.activa ? (
                       <button
+                        type="button"
                         onClick={() => onDesactivar(caja)}
                         disabled={caja.principal}
                         className={`rounded-xl px-3 py-2 text-sm font-medium ${
                           caja.principal
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            ? "cursor-not-allowed bg-slate-100 text-slate-400"
                             : "bg-amber-100 text-amber-700 hover:bg-amber-200"
                         }`}
                       >
@@ -92,6 +106,7 @@ export default function CajaTable({
                       </button>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => onActivar(caja)}
                         className="rounded-xl bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-200"
                       >
@@ -100,11 +115,12 @@ export default function CajaTable({
                     )}
 
                     <button
+                      type="button"
                       onClick={() => onPrincipal(caja)}
                       disabled={caja.principal}
                       className={`rounded-xl px-3 py-2 text-sm font-medium ${
                         caja.principal
-                          ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                          ? "cursor-not-allowed bg-slate-100 text-slate-400"
                           : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
                       }`}
                     >
@@ -112,6 +128,7 @@ export default function CajaTable({
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => onVerMovimientos(caja)}
                       className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
                     >

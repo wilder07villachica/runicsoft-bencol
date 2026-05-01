@@ -196,7 +196,7 @@ export default function CajaPage() {
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            
+
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">
@@ -230,7 +230,10 @@ export default function CajaPage() {
                 <CajaTable
                   cajas={cajas}
                   principal={principal}
-                  onEditar={(c) => { setCajaEditando(c); setOpenCajaModal(true) }}
+                  onEdit={(c) => {
+                    setCajaEditando(c)
+                    setOpenCajaModal(true)
+                  }}
                   onActivar={handleActivar}
                   onDesactivar={handleDesactivar}
                   onPrincipal={handlePrincipal}

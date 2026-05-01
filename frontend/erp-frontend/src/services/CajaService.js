@@ -11,8 +11,15 @@ export const getCajasActivas = async () => {
 }
 
 export const getCajaPrincipal = async () => {
-  const response = await api.get("/cajas/principal")
-  return response.data
+  try {
+    const response = await api.get("/cajas/principal")
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 400 || error.response?.status === 404) {
+      return null
+    }
+    throw error
+  }
 }
 
 export const getCajaById = async (id) => {

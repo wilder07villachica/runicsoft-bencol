@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Sidebar from "../components/layout/Sidebar"
 import Topbar from "../components/layout/Topbar"
@@ -23,6 +23,8 @@ export default function ClientePreciosPage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
+  const clienteId = Number(id)
+
   const [cliente, setCliente] = useState(null)
   const [productos, setProductos] = useState([])
   const [precios, setPrecios] = useState([])
@@ -31,15 +33,21 @@ export default function ClientePreciosPage() {
   const [openModal, setOpenModal] = useState(false)
   const [precioEditando, setPrecioEditando] = useState(null)
 
-  const cargarTodo = async () => {
+  const cargarTodo = useCallback(async () => {
+    if (!clienteId || Number.isNaN(clienteId)) {
+      setError("ID de cliente inválido")
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError("")
 
       const [clienteData, productosData, preciosData] = await Promise.all([
-        getClienteById(id),
+        getClienteById(clienteId),
         getProductos(),
-        getPreciosByCliente(id),
+        getPreciosByCliente(clienteId),
       ])
 
       setCliente(clienteData)
@@ -51,17 +59,11 @@ export default function ClientePreciosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [clienteId])
 
   useEffect(() => {
-    if (!id || id === "undefined") {
-      setError("ID de cliente inválido")
-      setLoading(false)
-      return
-    }
-
     cargarTodo()
-  }, [id])
+  }, [cargarTodo])
 
   const handleNuevo = () => {
     setPrecioEditando(null)
@@ -77,7 +79,7 @@ export default function ClientePreciosPage() {
     try {
       const payload = {
         ...form,
-        clienteId: Number(id),
+        clienteId,
       }
 
       if (precioEditando) {
@@ -136,14 +138,16 @@ export default function ClientePreciosPage() {
 
                 {cliente && (
                   <p className="text-slate-500">
-                    {cliente.nombre} · {categoriaLabels[cliente.categoria] || cliente.categoria}
+                    {cliente.nombre} ·{" "}
+                    {categoriaLabels[cliente.categoria] || cliente.categoria}
                   </p>
                 )}
               </div>
 
               <button
                 onClick={handleNuevo}
-                className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-3 font-medium text-white shadow-lg"
+                disabled={!!error || loading}
+                className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-3 font-medium text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Nuevo precio
               </button>
@@ -159,11 +163,15 @@ export default function ClientePreciosPage() {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Correo</p>
-                    <p className="font-medium text-slate-900">{cliente.correo || "No registrado"}</p>
+                    <p className="font-medium text-slate-900">
+                      {cliente.correo || "No registrado"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Teléfono</p>
-                    <p className="font-medium text-slate-900">{cliente.telefono || "No registrado"}</p>
+                    <p className="font-medium text-slate-900">
+                      {cliente.telefono || "No registrado"}
+                    </p>
                   </div>
                 </div>
               </div>

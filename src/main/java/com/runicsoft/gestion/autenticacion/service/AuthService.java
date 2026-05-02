@@ -18,6 +18,7 @@ import com.runicsoft.gestion.utils.RolUsuario;
 import com.runicsoft.gestion.utils.TipoToken;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,6 +41,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Transactional(readOnly = true)
     public AvailabilityResponse correoDisponible(String correo) {
@@ -81,12 +86,20 @@ public class AuthService {
 
         UsuarioToken token = crearToken(usuario, TipoToken.VERIFICACION_EMAIL, 24);
 
-        System.out.println("========================================");
-        System.out.println("TOKEN VERIFICACION EMAIL: " + token.getToken());
-        System.out.println("URL: http://localhost:5173/verificar-correo?token=" + token.getToken());
-        System.out.println("========================================");
+        String url = frontendUrl + "/verificar-correo?token=" + token.getToken();
 
-        return new MessageResponse("Registro creado. Verifica tu correo para activar la cuenta.");
+        emailService.enviarCorreo(
+                usuario.getCorreo(),
+                "Verifica tu cuenta - Runicsoft Bencol",
+                "Hola " + usuario.getNombre() + ",\n\n" +
+                        "Gracias por registrarte en Runicsoft Bencol.\n\n" +
+                        "Para activar tu cuenta, haz clic en este enlace:\n\n" +
+                        url + "\n\n" +
+                        "Este enlace vence en 24 horas.\n\n" +
+                        "Si tú no creaste esta cuenta, ignora este mensaje."
+        );
+
+        return new MessageResponse("Registro creado. Revisa tu correo para activar la cuenta.");
     }
 
     @Transactional
@@ -165,10 +178,18 @@ public class AuthService {
 
             UsuarioToken token = crearToken(usuario, TipoToken.RECUPERACION_PASSWORD, 1);
 
-            System.out.println("========================================");
-            System.out.println("TOKEN RECUPERACION PASSWORD: " + token.getToken());
-            System.out.println("URL: http://localhost:5173/restablecer-password?token=" + token.getToken());
-            System.out.println("========================================");
+            String url = frontendUrl + "/restablecer-password?token=" + token.getToken();
+
+            emailService.enviarCorreo(
+                    usuario.getCorreo(),
+                    "Recuperación de contraseña - Runicsoft Bencol",
+                    "Hola " + usuario.getNombre() + ",\n\n" +
+                            "Recibimos una solicitud para restablecer tu contraseña.\n\n" +
+                            "Haz clic en este enlace para crear una nueva contraseña:\n\n" +
+                            url + "\n\n" +
+                            "Este enlace vence en 1 hora.\n\n" +
+                            "Si tú no solicitaste esto, ignora este mensaje."
+            );
         });
 
         return new MessageResponse("Si el correo existe, se enviaron instrucciones de recuperación.");

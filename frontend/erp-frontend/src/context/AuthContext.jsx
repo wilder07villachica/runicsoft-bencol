@@ -8,23 +8,28 @@ export function AuthProvider({ children }) {
     const saved = localStorage.getItem("bencol_user")
     return saved ? JSON.parse(saved) : null
   })
+
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("bencol_token")
 
     if (!token) {
+      localStorage.removeItem("bencol_user")
       setUser(null)
       setLoading(false)
       return
     }
 
-    authService.me()
-      .then((data) => {
+    authService
+      .me()
+      .then(({ data }) => {
+        localStorage.setItem("bencol_user", JSON.stringify(data))
         setUser(data)
       })
       .catch(() => {
-        localStorage.removeItem("token")
+        localStorage.removeItem("bencol_token")
+        localStorage.removeItem("bencol_user")
         setUser(null)
       })
       .finally(() => {
@@ -33,10 +38,16 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = async (payload) => {
-    const { data } = await authService.login(payload)
+    const { data } = await authService.login({
+      correo: payload.correo.trim().toLowerCase(),
+      password: payload.password,
+    })
+
     localStorage.setItem("bencol_token", data.token)
     localStorage.setItem("bencol_user", JSON.stringify(data.usuario))
+
     setUser(data.usuario)
+
     return data
   }
 
@@ -47,7 +58,15 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

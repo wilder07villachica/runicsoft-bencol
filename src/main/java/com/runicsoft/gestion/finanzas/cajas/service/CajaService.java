@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.cajas.service;
 
+import com.runicsoft.gestion.autenticacion.model.Empresa;
+import com.runicsoft.gestion.autenticacion.service.UsuarioAutenticadoService;
 import com.runicsoft.gestion.finanzas.cajas.dtos.request.CajaRequest;
 import com.runicsoft.gestion.finanzas.cajas.dtos.response.CajaResponse;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
@@ -16,10 +18,13 @@ import java.util.List;
 public class CajaService {
 
     private final CajaRepository cajaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Transactional(readOnly = true)
     public List<CajaResponse> findAll() {
-        return cajaRepository.findAll()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cajaRepository.findByEmpresaId(empresaId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -27,7 +32,9 @@ public class CajaService {
 
     @Transactional(readOnly = true)
     public List<CajaResponse> findActivas() {
-        return cajaRepository.findByActivaTrue()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cajaRepository.findByEmpresaIdAndActivaTrue(empresaId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -40,8 +47,11 @@ public class CajaService {
 
     @Transactional(readOnly = true)
     public CajaResponse findPrincipal() {
-        Caja caja = cajaRepository.findByPrincipalTrue()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Caja caja = cajaRepository.findByEmpresaIdAndPrincipalTrue(empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una caja principal registrada."));
+
         return toResponse(caja);
     }
 
@@ -49,12 +59,18 @@ public class CajaService {
     public CajaResponse save(CajaRequest request) {
         validarRequest(request);
 
-        if (cajaRepository.existsByNombreIgnoreCase(request.getNombre().trim())) {
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+        Long empresaId = empresa.getId();
+
+        String nombre = request.getNombre().trim();
+
+        if (cajaRepository.existsByEmpresaIdAndNombreIgnoreCase(empresaId, nombre)) {
             throw new IllegalArgumentException("Ya existe una caja con ese nombre.");
         }
 
         Caja caja = new Caja();
-        caja.setNombre(request.getNombre().trim());
+        caja.setEmpresa(empresa);
+        caja.setNombre(nombre);
         caja.setDescripcion(limpiarTexto(request.getDescripcion()));
         caja.setSaldoActual(request.getSaldoActual() != null ? request.getSaldoActual() : BigDecimal.ZERO);
         caja.setActiva(request.getActiva() != null ? request.getActiva() : true);
@@ -62,7 +78,7 @@ public class CajaService {
         boolean seraPrincipal = request.getPrincipal() != null && request.getPrincipal();
 
         if (seraPrincipal) {
-            desmarcarCajaPrincipalActual();
+            desmarcarCajaPrincipalActual(empresaId);
             caja.setPrincipal(true);
             caja.setActiva(true);
         } else {
@@ -70,6 +86,7 @@ public class CajaService {
         }
 
         Caja cajaGuardada = cajaRepository.save(caja);
+
         return toResponse(cajaGuardada);
     }
 
@@ -80,6 +97,7 @@ public class CajaService {
         }
 
         Caja caja = findEntityById(id);
+        Long empresaId = caja.getEmpresa().getId();
 
         if (request.getNombre() == null || request.getNombre().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre de la caja es obligatorio.");
@@ -88,7 +106,7 @@ public class CajaService {
         String nuevoNombre = request.getNombre().trim();
 
         if (!caja.getNombre().equalsIgnoreCase(nuevoNombre)
-                && cajaRepository.existsByNombreIgnoreCase(nuevoNombre)) {
+                && cajaRepository.existsByEmpresaIdAndNombreIgnoreCase(empresaId, nuevoNombre)) {
             throw new IllegalArgumentException("Ya existe una caja con ese nombre.");
         }
 
@@ -96,6 +114,7 @@ public class CajaService {
         caja.setDescripcion(limpiarTexto(request.getDescripcion()));
 
         Caja cajaActualizada = cajaRepository.save(caja);
+
         return toResponse(cajaActualizada);
     }
 
@@ -108,6 +127,7 @@ public class CajaService {
         }
 
         caja.setActiva(true);
+
         return toResponse(cajaRepository.save(caja));
     }
 
@@ -124,6 +144,7 @@ public class CajaService {
         }
 
         caja.setActiva(false);
+
         return toResponse(cajaRepository.save(caja));
     }
 
@@ -135,12 +156,15 @@ public class CajaService {
             return toResponse(nuevaPrincipal);
         }
 
-        desmarcarCajaPrincipalActual();
+        Long empresaId = nuevaPrincipal.getEmpresa().getId();
+
+        desmarcarCajaPrincipalActual(empresaId);
 
         nuevaPrincipal.setPrincipal(true);
         nuevaPrincipal.setActiva(true);
 
         Caja cajaGuardada = cajaRepository.save(nuevaPrincipal);
+
         return toResponse(cajaGuardada);
     }
 
@@ -163,12 +187,14 @@ public class CajaService {
             throw new IllegalArgumentException("Debe proporcionar un ID de caja válido.");
         }
 
-        return cajaRepository.findById(id)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cajaRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La caja con ID " + id + " no existe."));
     }
 
-    private void desmarcarCajaPrincipalActual() {
-        cajaRepository.findByPrincipalTrue().ifPresent(cajaPrincipal -> {
+    private void desmarcarCajaPrincipalActual(Long empresaId) {
+        cajaRepository.findByEmpresaIdAndPrincipalTrue(empresaId).ifPresent(cajaPrincipal -> {
             cajaPrincipal.setPrincipal(false);
             cajaRepository.save(cajaPrincipal);
         });
@@ -178,6 +204,7 @@ public class CajaService {
         if (texto == null || texto.trim().isEmpty()) {
             return null;
         }
+
         return texto.trim();
     }
 

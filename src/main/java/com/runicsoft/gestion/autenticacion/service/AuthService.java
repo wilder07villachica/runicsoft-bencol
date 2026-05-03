@@ -13,6 +13,7 @@ import com.runicsoft.gestion.autenticacion.repository.*;
 import com.runicsoft.gestion.autenticacion.security.JwtService;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
 import com.runicsoft.gestion.finanzas.cajas.repository.CajaRepository;
+import com.runicsoft.gestion.utils.Estado;
 import com.runicsoft.gestion.utils.EstadoUsuario;
 import com.runicsoft.gestion.utils.RolUsuario;
 import com.runicsoft.gestion.utils.TipoToken;
@@ -34,6 +35,7 @@ import java.util.UUID;
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
+    private final EmpresaRepository empresaRepository;
     private final CajaRepository cajaRepository;
     private final RolRepository rolRepository;
     private final UsuarioTokenRepository tokenRepository;
@@ -72,7 +74,10 @@ public class AuthService {
         Rol rol = rolRepository.findByNombre(RolUsuario.ADMIN_EMPRESA)
                 .orElseThrow(() -> new IllegalArgumentException("No existe el rol ADMIN_EMPRESA. Ejecuta el script SQL de roles."));
 
+        Empresa empresa = crearEmpresaPorDefecto(request, correo, celular);
+
         Usuario usuario = new Usuario();
+        usuario.setEmpresa(empresa);
         usuario.setNombre(request.getNombre().trim());
         usuario.setCorreo(correo);
         usuario.setCelular(celular);
@@ -80,9 +85,10 @@ public class AuthService {
         usuario.setRol(rol);
         usuario.setEstado(EstadoUsuario.PENDIENTE_VERIFICACION);
         usuario.setEmailVerificado(false);
+
         usuarioRepository.save(usuario);
 
-        crearCajaPrincipalPorDefectoSiNoExiste();
+        crearCajaPrincipalPorDefectoSiNoExiste(empresa);
 
         UsuarioToken token = crearToken(usuario, TipoToken.VERIFICACION_EMAIL, 24);
 
@@ -93,8 +99,7 @@ public class AuthService {
                 "Verifica tu cuenta - Runicsoft Bencol",
                 "Hola " + usuario.getNombre() + ",\n\n" +
                         "Gracias por registrarte en Runicsoft Bencol.\n\n" +
-                        "Para activar tu cuenta, haz clic en este enlace:\n\n" +
-                        url + "\n\n" +
+                        "Para activar tu cuenta, haz clic en este enlace:\n\n" + url + "\n\n" +
                         "Este enlace vence en 24 horas.\n\n" +
                         "Si tú no creaste esta cuenta, ignora este mensaje."
         );
@@ -141,7 +146,11 @@ public class AuthService {
             throw new IllegalArgumentException("El usuario no está activo.");
         }
 
-        crearCajaPrincipalPorDefectoSiNoExiste();
+        if (usuario.getEmpresa() == null) {
+            throw new IllegalArgumentException("El usuario no tiene una empresa asociada.");
+        }
+
+        crearCajaPrincipalPorDefectoSiNoExiste(usuario.getEmpresa());
 
         String jti = UUID.randomUUID().toString();
         String jwt = jwtService.generateToken(usuario, jti);
@@ -153,6 +162,7 @@ public class AuthService {
         sesion.setUserAgent(httpRequest.getHeader("User-Agent"));
         sesion.setFechaExpiracion(LocalDateTime.now().plusMinutes(jwtService.getExpirationMinutes()));
         sesion.setUltimaActividad(LocalDateTime.now());
+
         sesionRepository.save(sesion);
 
         usuario.setUltimoLogin(LocalDateTime.now());
@@ -185,8 +195,7 @@ public class AuthService {
                     "Recuperación de contraseña - Runicsoft Bencol",
                     "Hola " + usuario.getNombre() + ",\n\n" +
                             "Recibimos una solicitud para restablecer tu contraseña.\n\n" +
-                            "Haz clic en este enlace para crear una nueva contraseña:\n\n" +
-                            url + "\n\n" +
+                            "Haz clic en este enlace para crear una nueva contraseña:\n\n" + url + "\n\n" +
                             "Este enlace vence en 1 hora.\n\n" +
                             "Si tú no solicitaste esto, ignora este mensaje."
             );
@@ -214,6 +223,19 @@ public class AuthService {
         return new MessageResponse("Contraseña actualizada correctamente.");
     }
 
+    private Empresa crearEmpresaPorDefecto(RegisterRequest request, String correo, String celular) {
+        String nombreEmpresa = "Empresa de " + request.getNombre().trim();
+
+        Empresa empresa = new Empresa();
+        empresa.setRazonSocial(nombreEmpresa);
+        empresa.setNombreComercial(nombreEmpresa);
+        empresa.setCorreo(correo);
+        empresa.setTelefono(celular);
+        empresa.setEstado(Estado.ACTIVO);
+
+        return empresaRepository.save(empresa);
+    }
+
     private UsuarioToken crearToken(Usuario usuario, TipoToken tipo, int horas) {
         UsuarioToken token = new UsuarioToken();
         token.setUsuario(usuario);
@@ -238,12 +260,13 @@ public class AuthService {
         return correo == null ? "" : correo.trim().toLowerCase();
     }
 
-    private void crearCajaPrincipalPorDefectoSiNoExiste() {
-        if (cajaRepository.findByPrincipalTrue().isPresent()) {
+    private void crearCajaPrincipalPorDefectoSiNoExiste(Empresa empresa) {
+        if (cajaRepository.findByEmpresaIdAndPrincipalTrue(empresa.getId()).isPresent()) {
             return;
         }
 
         Caja caja = new Caja();
+        caja.setEmpresa(empresa);
         caja.setNombre("Caja principal");
         caja.setDescripcion("Pendiente de configurar");
         caja.setSaldoActual(BigDecimal.ZERO);
@@ -254,8 +277,12 @@ public class AuthService {
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {
+        Empresa empresa = usuario.getEmpresa();
+
         return UsuarioResponse.builder()
                 .id(usuario.getId())
+                .empresaId(empresa != null ? empresa.getId() : null)
+                .empresaNombre(empresa != null ? empresa.getNombreComercial() : null)
                 .nombre(usuario.getNombre())
                 .correo(usuario.getCorreo())
                 .celular(usuario.getCelular())

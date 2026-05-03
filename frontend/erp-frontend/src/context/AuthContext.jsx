@@ -6,7 +6,13 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("bencol_user")
-    return saved ? JSON.parse(saved) : null
+
+    try {
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      localStorage.removeItem("bencol_user")
+      return null
+    }
   })
 
   const [loading, setLoading] = useState(true)
@@ -43,6 +49,14 @@ export function AuthProvider({ children }) {
       password: payload.password,
     })
 
+    if (!data?.token || !data?.usuario) {
+      throw new Error("Respuesta de login inválida.")
+    }
+
+    if (!data.usuario.empresaId) {
+      throw new Error("El usuario no tiene empresa asociada.")
+    }
+
     localStorage.setItem("bencol_token", data.token)
     localStorage.setItem("bencol_user", JSON.stringify(data.usuario))
 
@@ -51,10 +65,20 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const refreshUser = async () => {
+    const { data } = await authService.me()
+
+    localStorage.setItem("bencol_user", JSON.stringify(data))
+    setUser(data)
+
+    return data
+  }
+
   const logout = () => {
     localStorage.removeItem("bencol_token")
     localStorage.removeItem("bencol_user")
     setUser(null)
+    window.location.href = "/login"
   }
 
   return (
@@ -64,7 +88,10 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
+        empresaId: user?.empresaId ?? null,
+        empresaNombre: user?.empresaNombre ?? null,
       }}
     >
       {children}

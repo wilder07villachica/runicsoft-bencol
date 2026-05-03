@@ -2,6 +2,7 @@ package com.runicsoft.gestion.ventas.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.runicsoft.gestion.autenticacion.model.Empresa;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.utils.EstadoVenta;
 import com.runicsoft.gestion.utils.MetodoPago;
@@ -14,7 +15,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "ventas")
+@Table(
+        name = "ventas",
+        indexes = {
+                @Index(name = "idx_ventas_empresa", columnList = "empresa_id")
+        }
+)
 @Data
 public class Venta {
 
@@ -22,13 +28,18 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    @JsonIgnore
+    private Empresa empresa;
+
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private List<DetalleVenta>  detalleVentas;
+    private List<DetalleVenta> detalleVentas;
 
     @Column(name = "total_pagar")
     private BigDecimal totalPagar;
@@ -38,7 +49,7 @@ public class Venta {
     private TipoPago tipoPago = TipoPago.CREDITO;
 
     @Column(name = "cantidad_pagada")
-    private BigDecimal cantidadPagada =  BigDecimal.ZERO;
+    private BigDecimal cantidadPagada = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "metodo_pago")
@@ -63,11 +74,9 @@ public class Venta {
         }
         if (cantidadPagada.compareTo(BigDecimal.ZERO) == 0) {
             tipoPago = TipoPago.CREDITO;
-        }
-        else if (cantidadPagada.compareTo(totalPagar) < 0) {
+        } else if (cantidadPagada.compareTo(totalPagar) < 0) {
             tipoPago = TipoPago.ABONO;
-        }
-        else {
+        } else {
             tipoPago = TipoPago.CANCELADO;
         }
     }

@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.ventas.service;
 
+import com.runicsoft.gestion.autenticacion.model.Empresa;
+import com.runicsoft.gestion.autenticacion.service.UsuarioAutenticadoService;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.clientes.repository.ClienteRepository;
 import com.runicsoft.gestion.finanzas.FinanzasVentaService;
@@ -32,10 +34,13 @@ public class VentaService {
     private final PrecioRepository precioRepository;
     private final VentaMapper ventaMapper;
     private final FinanzasVentaService finanzasVentaService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Transactional(readOnly = true)
     public List<VentaResumenResponse> findAll() {
-        return ventaRepository.findAll()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return ventaRepository.findByEmpresaId(empresaId)
                 .stream()
                 .map(ventaMapper::toResumenResponse)
                 .toList();
@@ -46,9 +51,12 @@ public class VentaService {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ingresar un ID valido para poder continuar.");
         }
-        Venta venta = ventaRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("El registro con el ID: " + id + " no existe")
-        );
+
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Venta venta = ventaRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("El registro con el ID: " + id + " no existe"));
+
         return ventaMapper.toResponse(venta);
     }
 
@@ -57,61 +65,87 @@ public class VentaService {
         if (request == null) {
             throw new IllegalArgumentException("La solicitud de venta no puede ser nula.");
         }
+
         if (request.getClienteId() == null || request.getClienteId() <= 0) {
             throw new IllegalArgumentException("Debe proporcionar un ID de cliente válido.");
         }
+
         if (request.getDetalleVentas() == null || request.getDetalleVentas().isEmpty()) {
             throw new IllegalArgumentException("Toda venta debe tener al menos un detalle asociado.");
         }
+
         if (request.getCantidadPagada() != null && request.getCantidadPagada().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("La cantidad pagada no puede ser negativa.");
         }
+
         if (request.getCantidadPagada() != null
                 && request.getCantidadPagada().compareTo(BigDecimal.ZERO) > 0
                 && request.getMetodoPago() == null) {
             throw new IllegalArgumentException("Debe indicar el método de pago cuando exista un monto pagado.");
         }
+
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+        Long empresaId = empresa.getId();
+
         Venta venta = ventaMapper.toEntity(request);
-        Cliente cliente = clienteRepository.findById(request.getClienteId())
+        venta.setEmpresa(empresa);
+
+        Cliente cliente = clienteRepository.findByIdAndEmpresaId(request.getClienteId(), empresaId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "El cliente con el ID: " + request.getClienteId() + " no existe"
                 ));
+
         venta.setCliente(cliente);
+
         if (venta.getCantidadPagada() == null) {
             venta.setCantidadPagada(BigDecimal.ZERO);
         }
+
         BigDecimal total = BigDecimal.ZERO;
+
         for (DetalleVenta detalle : venta.getDetalleVentas()) {
             if (detalle.getProducto() == null || detalle.getProducto().getId() == null || detalle.getProducto().getId() <= 0) {
                 throw new IllegalArgumentException("Cada detalle debe tener un producto válido.");
             }
+
             if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
                 throw new IllegalArgumentException("La cantidad de cada producto debe ser mayor a cero.");
             }
-            Producto producto = productoRepository.findById(detalle.getProducto().getId())
+
+            Producto producto = productoRepository.findByIdAndEmpresaId(detalle.getProducto().getId(), empresaId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "El producto con el ID: " + detalle.getProducto().getId() + " no existe"
                     ));
+
             BigDecimal precioUnitario = precioRepository.findByClienteAndProducto(cliente, producto)
                     .map(Precio::getPrecio)
                     .orElse(producto.getPrecio());
+
             if (precioUnitario == null) {
                 throw new IllegalArgumentException("El producto con el ID: " + producto.getId() + " no tiene precio definido.");
             }
+
             BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(detalle.getCantidad()));
+
             detalle.setVenta(venta);
             detalle.setProducto(producto);
             detalle.setPrecioUnitario(precioUnitario);
             detalle.setSubtotal(subtotal);
+
             total = total.add(subtotal);
         }
+
         if (venta.getCantidadPagada().compareTo(total) > 0) {
             throw new IllegalArgumentException("La cantidad pagada no puede ser mayor al total.");
         }
+
         venta.setTotalPagar(total);
         venta.calcularTipoPago();
+
         Venta ventaGuardada = ventaRepository.save(venta);
+
         finanzasVentaService.procesarImpactoFinanciero(ventaGuardada, request.getCajaId());
+
         return ventaMapper.toResponse(ventaGuardada);
     }
 
@@ -120,10 +154,16 @@ public class VentaService {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ingresar un ID válido.");
         }
-        Venta venta = ventaRepository.findById(id)
+
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Venta venta = ventaRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La venta no existe."));
+
         venta.setEstadoVenta(EstadoVenta.ATENDIDO);
+
         Venta ventaActualizada = ventaRepository.save(venta);
+
         return ventaMapper.toResponse(ventaActualizada);
     }
 }

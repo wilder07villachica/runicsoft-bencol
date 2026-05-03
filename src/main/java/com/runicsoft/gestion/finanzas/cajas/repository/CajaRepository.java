@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CajaRepository extends JpaRepository<Caja, Long> {
-    Optional<Caja> findByPrincipalTrue();
-    boolean existsByNombreIgnoreCase(String nombre);
-    List<Caja> findByActivaTrue();
+    Optional<Caja> findByEmpresaIdAndPrincipalTrue(Long empresaId);
+    boolean existsByEmpresaIdAndNombreIgnoreCase(Long empresaId, String nombre);
+    List<Caja> findByEmpresaId(Long empresaId);
+    List<Caja> findByEmpresaIdAndActivaTrue(Long empresaId);
+    Optional<Caja> findByIdAndEmpresaId(Long id, Long empresaId);
 }

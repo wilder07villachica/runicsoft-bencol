@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.cuentas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.runicsoft.gestion.autenticacion.model.Empresa;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.finanzas.shared.EstadoCuentaCobrar;
 import com.runicsoft.gestion.ventas.model.Venta;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "cuentas_por_cobrar",
         indexes = {
+                @Index(name = "idx_cxc_empresa", columnList = "empresa_id"),
                 @Index(name = "idx_cxc_cliente", columnList = "cliente_id"),
                 @Index(name = "idx_cxc_estado", columnList = "estado"),
                 @Index(name = "idx_cxc_venta", columnList = "venta_id")
@@ -25,6 +28,11 @@ public class CuentaPorCobrar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    @JsonIgnore
+    private Empresa empresa;
 
     @OneToOne(optional = false)
     @JoinColumn(name = "venta_id", nullable = false, unique = true)

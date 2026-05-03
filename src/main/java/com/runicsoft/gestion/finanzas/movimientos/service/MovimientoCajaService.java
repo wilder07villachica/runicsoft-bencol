@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.movimientos.service;
 
+import com.runicsoft.gestion.autenticacion.model.Empresa;
+import com.runicsoft.gestion.autenticacion.service.UsuarioAutenticadoService;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.clientes.repository.ClienteRepository;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
@@ -28,10 +30,13 @@ public class MovimientoCajaService {
     private final CajaRepository cajaRepository;
     private final ClienteRepository clienteRepository;
     private final VentaRepository ventaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Transactional(readOnly = true)
     public List<MovimientoCajaResponse> findAll() {
-        return movimientoCajaRepository.findAll()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return movimientoCajaRepository.findByEmpresaId(empresaId)
                 .stream()
                 .sorted(Comparator.comparing(MovimientoCaja::getFecha).reversed())
                 .map(this::toResponse)
@@ -49,11 +54,12 @@ public class MovimientoCajaService {
             throw new IllegalArgumentException("Debe proporcionar un ID de caja válido.");
         }
 
-        if (!cajaRepository.existsById(cajaId)) {
-            throw new IllegalArgumentException("La caja con ID " + cajaId + " no existe.");
-        }
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
 
-        return movimientoCajaRepository.findByCajaIdOrderByFechaDesc(cajaId)
+        cajaRepository.findByIdAndEmpresaId(cajaId, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("La caja con ID " + cajaId + " no existe."));
+
+        return movimientoCajaRepository.findByEmpresaIdAndCajaIdOrderByFechaDesc(empresaId, cajaId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -83,11 +89,14 @@ public class MovimientoCajaService {
             throw new IllegalArgumentException("La categoría de egreso solo aplica para movimientos de tipo EGRESO.");
         }
 
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+
         Caja caja = findCajaActiva(request.getCajaId());
         Cliente cliente = findClienteIfPresent(request.getClienteId());
         Venta venta = findVentaIfPresent(request.getVentaId());
 
         MovimientoCaja movimiento = new MovimientoCaja();
+        movimiento.setEmpresa(empresa);
         movimiento.setCaja(caja);
         movimiento.setTipo(TipoMovimientoCaja.INGRESO);
         movimiento.setOrigen(request.getOrigen());
@@ -132,6 +141,8 @@ public class MovimientoCajaService {
             throw new IllegalArgumentException("Debe indicar una categoría de egreso.");
         }
 
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+
         Caja caja = findCajaActiva(request.getCajaId());
         Cliente cliente = findClienteIfPresent(request.getClienteId());
         Venta venta = findVentaIfPresent(request.getVentaId());
@@ -143,6 +154,7 @@ public class MovimientoCajaService {
         }
 
         MovimientoCaja movimiento = new MovimientoCaja();
+        movimiento.setEmpresa(empresa);
         movimiento.setCaja(caja);
         movimiento.setTipo(TipoMovimientoCaja.EGRESO);
         movimiento.setOrigen(request.getOrigen());
@@ -177,7 +189,9 @@ public class MovimientoCajaService {
     }
 
     private Caja findCajaActiva(Long cajaId) {
-        Caja caja = cajaRepository.findById(cajaId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Caja caja = cajaRepository.findByIdAndEmpresaId(cajaId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La caja indicada no existe."));
 
         if (Boolean.FALSE.equals(caja.getActiva())) {
@@ -192,7 +206,9 @@ public class MovimientoCajaService {
             return null;
         }
 
-        return clienteRepository.findById(clienteId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return clienteRepository.findByIdAndEmpresaId(clienteId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("El cliente con ID " + clienteId + " no existe."));
     }
 
@@ -201,7 +217,9 @@ public class MovimientoCajaService {
             return null;
         }
 
-        return ventaRepository.findById(ventaId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return ventaRepository.findByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La venta con ID " + ventaId + " no existe."));
     }
 
@@ -210,7 +228,9 @@ public class MovimientoCajaService {
             throw new IllegalArgumentException("Debe proporcionar un ID de movimiento válido.");
         }
 
-        return movimientoCajaRepository.findById(id)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return movimientoCajaRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("El movimiento con ID " + id + " no existe."));
     }
 
@@ -218,6 +238,7 @@ public class MovimientoCajaService {
         if (texto == null || texto.trim().isEmpty()) {
             return null;
         }
+
         return texto.trim();
     }
 

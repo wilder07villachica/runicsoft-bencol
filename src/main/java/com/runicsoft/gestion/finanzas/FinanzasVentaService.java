@@ -30,7 +30,14 @@ public class FinanzasVentaService {
             throw new IllegalArgumentException("La venta no puede ser nula.");
         }
 
+        if (venta.getEmpresa() == null || venta.getEmpresa().getId() == null) {
+            throw new IllegalArgumentException("La venta no tiene empresa asociada.");
+        }
+
+        Long empresaId = venta.getEmpresa().getId();
+
         BigDecimal total = venta.getTotalPagar();
+
         if (total == null || total.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("La venta debe tener un total válido mayor a cero.");
         }
@@ -54,7 +61,7 @@ public class FinanzasVentaService {
                 throw new IllegalArgumentException("Debe enviar una caja válida cuando exista un pago.");
             }
 
-            Caja caja = cajaRepository.findById(cajaId)
+            Caja caja = cajaRepository.findByIdAndEmpresaId(cajaId, empresaId)
                     .orElseThrow(() -> new IllegalArgumentException("La caja indicada no existe."));
 
             if (Boolean.FALSE.equals(caja.getActiva())) {
@@ -69,7 +76,7 @@ public class FinanzasVentaService {
                 throw new IllegalArgumentException("La venta debe estar guardada antes de generar cuenta por cobrar.");
             }
 
-            if (cuentaPorCobrarRepository.existsByVentaId(venta.getId())) {
+            if (cuentaPorCobrarRepository.existsByVentaIdAndEmpresaId(venta.getId(), empresaId)) {
                 throw new IllegalArgumentException("La venta ya tiene una cuenta por cobrar registrada.");
             }
 
@@ -79,6 +86,7 @@ public class FinanzasVentaService {
 
     private void registrarIngresoCaja(Caja caja, Venta venta, BigDecimal monto) {
         MovimientoCaja movimiento = new MovimientoCaja();
+        movimiento.setEmpresa(venta.getEmpresa());
         movimiento.setCaja(caja);
         movimiento.setTipo(TipoMovimientoCaja.INGRESO);
         movimiento.setOrigen(OrigenMovimientoCaja.VENTA);
@@ -93,11 +101,13 @@ public class FinanzasVentaService {
 
         BigDecimal saldoActual = caja.getSaldoActual() == null ? BigDecimal.ZERO : caja.getSaldoActual();
         caja.setSaldoActual(saldoActual.add(monto));
+
         cajaRepository.save(caja);
     }
 
     private void crearCuentaPorCobrar(Venta venta, BigDecimal total, BigDecimal pagado) {
         CuentaPorCobrar cuenta = new CuentaPorCobrar();
+        cuenta.setEmpresa(venta.getEmpresa());
         cuenta.setVenta(venta);
         cuenta.setCliente(venta.getCliente());
         cuenta.setMontoTotal(total);

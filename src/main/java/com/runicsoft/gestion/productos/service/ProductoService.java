@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.productos.service;
 
+import com.runicsoft.gestion.autenticacion.model.Empresa;
+import com.runicsoft.gestion.autenticacion.service.UsuarioAutenticadoService;
 import com.runicsoft.gestion.productos.dtos.request.ProductoRequest;
 import com.runicsoft.gestion.productos.dtos.response.ProductoResponse;
 import com.runicsoft.gestion.productos.mapper.ProductoMapper;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -17,10 +20,13 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final ProductoMapper mapper;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Transactional(readOnly = true)
     public List<ProductoResponse> findAll() {
-        return productoRepository.findAll()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return productoRepository.findByEmpresaId(empresaId)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -31,19 +37,28 @@ public class ProductoService {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ingresar un ID valido para poder continuar.");
         }
-        Producto producto = productoRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("El registro con el ID: " +  id + " no existe")
-        );
+
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Producto producto = productoRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("El registro con el ID: " + id + " no existe"));
+
         return mapper.toResponse(producto);
     }
 
     @Transactional
     public ProductoResponse save(ProductoRequest request) {
-        if (request.getPrecio() == null || request.getPrecio().intValue() <= 0) {
+        if (request.getPrecio() == null || request.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Se debe asignar un precio de venta para cada producto registrado.");
         }
+
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+
         Producto producto = mapper.toEntity(request);
+        producto.setEmpresa(empresa);
+
         Producto productoGuardado = productoRepository.save(producto);
+
         return mapper.toResponse(productoGuardado);
     }
 
@@ -52,11 +67,16 @@ public class ProductoService {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido");
         }
-        Producto productoUpdate = productoRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("El registro con el ID: " +  id + " no existe")
-        );
+
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        Producto productoUpdate = productoRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("El registro con el ID: " + id + " no existe"));
+
         mapper.updateEntityFromRequest(request, productoUpdate);
+
         Producto productoActualizado = productoRepository.save(productoUpdate);
+
         return mapper.toResponse(productoActualizado);
     }
 }

@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.cuentas.service;
 
+import com.runicsoft.gestion.autenticacion.model.Empresa;
+import com.runicsoft.gestion.autenticacion.service.UsuarioAutenticadoService;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
 import com.runicsoft.gestion.finanzas.cajas.repository.CajaRepository;
 import com.runicsoft.gestion.finanzas.cuentas.dtos.request.AbonoCuentaPorCobrarRequest;
@@ -32,10 +34,13 @@ public class CuentaPorCobrarService {
     private final CajaRepository cajaRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final VentaRepository ventaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Transactional(readOnly = true)
     public List<CuentaPorCobrarResponse> listar() {
-        return cuentaPorCobrarRepository.findAll()
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cuentaPorCobrarRepository.findByEmpresaId(empresaId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -43,7 +48,9 @@ public class CuentaPorCobrarService {
 
     @Transactional(readOnly = true)
     public List<CuentaPorCobrarResponse> listarPorCliente(Long clienteId) {
-        return cuentaPorCobrarRepository.findByClienteId(clienteId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cuentaPorCobrarRepository.findByEmpresaIdAndClienteId(empresaId, clienteId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -51,7 +58,9 @@ public class CuentaPorCobrarService {
 
     @Transactional(readOnly = true)
     public List<CuentaPorCobrarResponse> listarPorEstado(EstadoCuentaCobrar estado) {
-        return cuentaPorCobrarRepository.findByEstado(estado)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        return cuentaPorCobrarRepository.findByEmpresaIdAndEstado(empresaId, estado)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -59,7 +68,9 @@ public class CuentaPorCobrarService {
 
     @Transactional(readOnly = true)
     public CuentaPorCobrarResponse buscarPorId(Long cuentaId) {
-        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findById(cuentaId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findByIdAndEmpresaId(cuentaId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta por cobrar no existe."));
 
         return toResponse(cuenta);
@@ -67,7 +78,9 @@ public class CuentaPorCobrarService {
 
     @Transactional
     public CuentaPorCobrarResponse actualizar(Long cuentaId, ActualizarCuentaPorCobrarRequest request) {
-        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findById(cuentaId)
+        Long empresaId = usuarioAutenticadoService.getEmpresaActualId();
+
+        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findByIdAndEmpresaId(cuentaId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta por cobrar no existe."));
 
         if (request.getFechaVencimiento() != null) {
@@ -90,11 +103,18 @@ public class CuentaPorCobrarService {
 
     @Transactional
     public void registrarAbono(Long cuentaId, AbonoCuentaPorCobrarRequest request) {
-        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findById(cuentaId)
+        Empresa empresa = usuarioAutenticadoService.getEmpresaActual();
+        Long empresaId = empresa.getId();
+
+        CuentaPorCobrar cuenta = cuentaPorCobrarRepository.findByIdAndEmpresaId(cuentaId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta por cobrar no existe."));
 
-        Caja caja = cajaRepository.findById(request.getCajaId())
+        Caja caja = cajaRepository.findByIdAndEmpresaId(request.getCajaId(), empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("La caja no existe."));
+
+        if (Boolean.FALSE.equals(caja.getActiva())) {
+            throw new IllegalArgumentException("La caja indicada está inactiva.");
+        }
 
         if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto del abono debe ser mayor a cero.");
@@ -104,16 +124,23 @@ public class CuentaPorCobrarService {
             throw new IllegalArgumentException("El abono no puede ser mayor al saldo pendiente.");
         }
 
+        if (request.getMetodoPago() == null) {
+            throw new IllegalArgumentException("Debe indicar el método de pago.");
+        }
+
         AbonoCuentaPorCobrar abono = new AbonoCuentaPorCobrar();
+        abono.setEmpresa(empresa);
         abono.setCuentaPorCobrar(cuenta);
         abono.setCaja(caja);
         abono.setMonto(request.getMonto());
         abono.setMetodoPago(request.getMetodoPago());
         abono.setReferencia(request.getReferencia());
         abono.setObservacion(request.getObservacion());
+
         abonoRepository.save(abono);
 
         MovimientoCaja movimiento = new MovimientoCaja();
+        movimiento.setEmpresa(empresa);
         movimiento.setCaja(caja);
         movimiento.setTipo(TipoMovimientoCaja.INGRESO);
         movimiento.setOrigen(OrigenMovimientoCaja.ABONO_CUENTA_COBRAR);
@@ -123,24 +150,32 @@ public class CuentaPorCobrarService {
         movimiento.setObservacion("Abono registrado a cuenta por cobrar.");
         movimiento.setCliente(cuenta.getCliente());
         movimiento.setVenta(cuenta.getVenta());
+
         movimientoCajaRepository.save(movimiento);
 
-        caja.setSaldoActual(caja.getSaldoActual().add(request.getMonto()));
+        BigDecimal saldoActualCaja = caja.getSaldoActual() == null ? BigDecimal.ZERO : caja.getSaldoActual();
+        caja.setSaldoActual(saldoActualCaja.add(request.getMonto()));
         cajaRepository.save(caja);
 
-        BigDecimal nuevoMontoPagado = cuenta.getMontoPagado().add(request.getMonto());
-        BigDecimal nuevoSaldo = cuenta.getSaldoPendiente().subtract(request.getMonto());
+        BigDecimal montoPagadoActual = cuenta.getMontoPagado() == null ? BigDecimal.ZERO : cuenta.getMontoPagado();
+        BigDecimal saldoPendienteActual = cuenta.getSaldoPendiente() == null ? BigDecimal.ZERO : cuenta.getSaldoPendiente();
+
+        BigDecimal nuevoMontoPagado = montoPagadoActual.add(request.getMonto());
+        BigDecimal nuevoSaldo = saldoPendienteActual.subtract(request.getMonto());
 
         cuenta.setMontoPagado(nuevoMontoPagado);
         cuenta.setSaldoPendiente(nuevoSaldo);
 
         Venta venta = cuenta.getVenta();
+
         if (venta != null) {
             BigDecimal cantidadPagadaActual = venta.getCantidadPagada() != null
                     ? venta.getCantidadPagada()
                     : BigDecimal.ZERO;
+
             venta.setCantidadPagada(cantidadPagadaActual.add(request.getMonto()));
             venta.calcularTipoPago();
+
             ventaRepository.save(venta);
         }
 

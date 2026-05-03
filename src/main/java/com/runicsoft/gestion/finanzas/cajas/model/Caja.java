@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.cajas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.runicsoft.gestion.autenticacion.model.Empresa;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +14,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "cajas",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_caja_empresa_nombre", columnNames = {"empresa_id", "nombre"})
+        },
         indexes = {
+                @Index(name = "idx_caja_empresa", columnList = "empresa_id"),
                 @Index(name = "idx_caja_activa", columnList = "activa"),
                 @Index(name = "idx_caja_principal", columnList = "principal")
         }
@@ -27,7 +33,12 @@ public class Caja {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    @JsonIgnore
+    private Empresa empresa;
+
+    @Column(nullable = false, length = 100)
     private String nombre;
 
     @Column(length = 200)

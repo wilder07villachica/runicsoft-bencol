@@ -9,14 +9,12 @@ import java.util.Optional;
 
 public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, Long> {
 
-    @Override
     @EntityGraph(attributePaths = {"caja", "cliente", "venta"})
-    List<MovimientoCaja> findAll();
-
-    @Override
-    @EntityGraph(attributePaths = {"caja", "cliente", "venta"})
-    Optional<MovimientoCaja> findById(Long id);
+    List<MovimientoCaja> findByEmpresaId(Long empresaId);
 
     @EntityGraph(attributePaths = {"caja", "cliente", "venta"})
-    List<MovimientoCaja> findByCajaIdOrderByFechaDesc(Long cajaId);
+    Optional<MovimientoCaja> findByIdAndEmpresaId(Long id, Long empresaId);
+
+    @EntityGraph(attributePaths = {"caja", "cliente", "venta"})
+    List<MovimientoCaja> findByEmpresaIdAndCajaIdOrderByFechaDesc(Long empresaId, Long cajaId);
 }

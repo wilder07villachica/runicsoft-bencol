@@ -4,7 +4,11 @@ import com.runicsoft.gestion.productos.model.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
-
+    List<Producto> findByEmpresaId(Long empresaId);
+    Optional<Producto> findByIdAndEmpresaId(Long id, Long empresaId);
 }

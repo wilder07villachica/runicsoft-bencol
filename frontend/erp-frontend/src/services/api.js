@@ -17,13 +17,18 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status
+    const isAuthPage =
+      window.location.pathname === "/login" ||
+      window.location.pathname === "/register" ||
+      window.location.pathname === "/verificar-correo" ||
+      window.location.pathname === "/olvide-password" ||
+      window.location.pathname === "/restablecer-password"
+
+    if ((status === 401 || status === 403) && !isAuthPage) {
       localStorage.removeItem("bencol_token")
       localStorage.removeItem("bencol_user")
-
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login"
-      }
+      window.location.href = "/login"
     }
 
     return Promise.reject(error)

@@ -1,5 +1,7 @@
 package com.runicsoft.gestion.finanzas.movimientos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.runicsoft.gestion.autenticacion.model.Empresa;
 import com.runicsoft.gestion.clientes.model.Cliente;
 import com.runicsoft.gestion.finanzas.cajas.model.Caja;
 import com.runicsoft.gestion.finanzas.shared.CategoriaEgreso;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "movimientos_caja",
         indexes = {
+                @Index(name = "idx_mov_empresa", columnList = "empresa_id"),
                 @Index(name = "idx_mov_caja", columnList = "caja_id"),
                 @Index(name = "idx_mov_fecha", columnList = "fecha"),
                 @Index(name = "idx_mov_tipo", columnList = "tipo"),
@@ -30,6 +33,11 @@ public class MovimientoCaja {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    @JsonIgnore
+    private Empresa empresa;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "caja_id", nullable = false)

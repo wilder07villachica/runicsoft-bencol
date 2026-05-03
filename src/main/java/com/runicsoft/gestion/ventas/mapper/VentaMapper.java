@@ -1,8 +1,6 @@
 package com.runicsoft.gestion.ventas.mapper;
 
 import com.runicsoft.gestion.clientes.model.Cliente;
-import com.runicsoft.gestion.finanzas.cuentas.model.CuentaPorCobrar;
-import com.runicsoft.gestion.finanzas.cuentas.repository.CuentaPorCobrarRepository;
 import com.runicsoft.gestion.finanzas.shared.EstadoCuentaCobrar;
 import com.runicsoft.gestion.productos.model.Producto;
 import com.runicsoft.gestion.ventas.dtos.request.DetalleVentaRequest;
@@ -12,7 +10,6 @@ import com.runicsoft.gestion.ventas.dtos.response.VentaResponse;
 import com.runicsoft.gestion.ventas.dtos.response.VentaResumenResponse;
 import com.runicsoft.gestion.ventas.model.DetalleVenta;
 import com.runicsoft.gestion.ventas.model.Venta;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -21,10 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class VentaMapper {
-
-    private final CuentaPorCobrarRepository cuentaPorCobrarRepository;
 
     public Venta toEntity(VentaRequest request) {
         Venta venta = new Venta();
@@ -97,25 +91,37 @@ public class VentaMapper {
     }
 
     public VentaResumenResponse toResumenResponse(Venta venta) {
-        CuentaPorCobrar cuenta = cuentaPorCobrarRepository
-                .findByVentaId(venta.getId())
-                .orElse(null);
+        BigDecimal total = venta.getTotalPagar() != null
+                ? venta.getTotalPagar()
+                : BigDecimal.ZERO;
 
-        BigDecimal saldo = BigDecimal.ZERO;
-        EstadoCuentaCobrar estadoCobro = null;
+        BigDecimal cantidadPagada = venta.getCantidadPagada() != null
+                ? venta.getCantidadPagada()
+                : BigDecimal.ZERO;
 
-        if (cuenta != null) {
-            saldo = cuenta.getSaldoPendiente();
-            estadoCobro = cuenta.getEstado();
+        BigDecimal saldo = total.subtract(cantidadPagada);
+
+        if (saldo.compareTo(BigDecimal.ZERO) < 0) {
+            saldo = BigDecimal.ZERO;
+        }
+
+        EstadoCuentaCobrar estadoCobro;
+
+        if (saldo.compareTo(BigDecimal.ZERO) == 0) {
+            estadoCobro = EstadoCuentaCobrar.PAGADA;
+        } else if (cantidadPagada.compareTo(BigDecimal.ZERO) > 0) {
+            estadoCobro = EstadoCuentaCobrar.PARCIAL;
+        } else {
+            estadoCobro = EstadoCuentaCobrar.PENDIENTE;
         }
 
         return new VentaResumenResponse(
                 venta.getId(),
                 venta.getCliente() != null ? venta.getCliente().getId() : null,
                 venta.getCliente() != null ? venta.getCliente().getNombre() : null,
-                venta.getTotalPagar(),
+                total,
                 venta.getTipoPago(),
-                venta.getCantidadPagada(),
+                cantidadPagada,
                 venta.getMetodoPago(),
                 venta.getFechaCreacion(),
                 venta.getEstadoVenta(),

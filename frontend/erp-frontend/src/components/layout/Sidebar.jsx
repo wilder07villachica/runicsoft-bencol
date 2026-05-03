@@ -16,7 +16,7 @@ const menuItems = [
   { label: "Ventas", icon: ShoppingCart, to: "/ventas" },
   { label: "Finanzas", icon: Landmark, to: "/cuentas-por-cobrar" },
   { label: "Caja", icon: Wallet, to: "/caja" },
-  { label: "Configuración", icon: Settings, to: "/configuracion", disabled: true },
+  { label: "Configuración", icon: Settings, to: "/configuracion" },
 ]
 
 export default function Sidebar() {

@@ -1,7 +1,7 @@
-import { getClientes } from "./ClienteService"
-import { getProductos } from "./ProductoService"
+import { getClientes } from "./clienteService"
+import { getProductos } from "./productoService"
 import { getVentas } from "./ventaService"
-import { getCajas, getCajaPrincipal } from "./CajaService"
+import { getCajas, getCajaPrincipal } from "./cajaService"
 import { getMovimientosCaja } from "./movimientoCajaService"
 
 export const getDashboardData = async () => {

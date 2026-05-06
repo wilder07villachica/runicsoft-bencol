@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import VentaTable from "../components/ventas/ventaTable"
-import VentaInfoModal from "../components/ventas/ventaInfoModal"
-import { getClientes } from "../services/clienteService"
-import { getProductos } from "../services/productoService"
-import { getVentas, getVentaById, createVenta, marcarVentaComoEntregada } from "../services/ventaService"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import VentaTable from "../components/ventas/ventaTable.jsx"
+import VentaInfoModal from "../components/ventas/ventaInfoModal.jsx"
+import { getClientes } from "../services/clienteService.js"
+import { getProductos } from "../services/productoService.js"
+import { getVentas, getVentaById, createVenta, marcarVentaComoEntregada } from "../services/ventaService.js"
 import { useNavigate } from "react-router-dom"
 
 export default function VentasPage() {

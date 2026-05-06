@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
-import { getCajasActivas } from "../services/CajaService"
+import { getCajasActivas } from "../services/cajaService.js"
 
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
 import {
   actualizarCuentaPorCobrar,
   listarCuentasPorCobrar,
   registrarAbonoCuentaPorCobrar,
-} from "../services/cuentaPorCobrarService"
+} from "../services/cuentaPorCobrarService.js"
 
 export default function CuentasPorCobrarPage() {
   const [cuentas, setCuentas] = useState([])

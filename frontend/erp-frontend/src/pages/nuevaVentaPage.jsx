@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Plus, Trash2 } from "lucide-react"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import { getClientes } from "../services/clienteService"
-import { getProductos } from "../services/productoService"
-import { createVenta } from "../services/ventaService"
-import { getCajas } from "../services/cajaService"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import { getClientes } from "../services/clienteService.js"
+import { getProductos } from "../services/productoService.js"
+import { createVenta } from "../services/ventaService.js"
+import { getCajas } from "../services/cajaService.js"
 
 const metodoPagoLabels = {
   EFECTIVO: "Efectivo",

@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import PrecioTable from "../components/precios/precioTable"
-import PrecioFormModal from "../components/precios/precioFormModal"
-import { getClienteById } from "../services/clienteService"
-import { getProductos } from "../services/productoService"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import PrecioTable from "../components/precios/precioTable.jsx"
+import PrecioFormModal from "../components/precios/precioFormModal.jsx"
+import { getClienteById } from "../services/clienteService.js"
+import { getProductos } from "../services/productoService.js"
 import {
   getPreciosByCliente,
   createPrecio,
   updatePrecio,
   deletePrecio,
-} from "../services/precioService"
+} from "../services/precioService.js"
 
 const categoriaLabels = {
   DISTRIBUIDOR: "Distribuidor",

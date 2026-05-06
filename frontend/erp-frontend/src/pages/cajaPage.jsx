@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import CajaResumenCards from "../components/caja/cajaResumenCards"
-import CajaTable from "../components/caja/cajaTable"
-import MovimientoCajaTable from "../components/caja/movimientoCajaTable"
-import CajaFormModal from "../components/caja/cajaFormModal"
-import MovimientoIngresoModal from "../components/caja/movimientoIngresoModal"
-import MovimientoEgresoModal from "../components/caja/movimientoEgresoModal"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import CajaResumenCards from "../components/caja/cajaResumenCards.jsx"
+import CajaTable from "../components/caja/cajaTable.jsx"
+import MovimientoCajaTable from "../components/caja/movimientoCajaTable.jsx"
+import CajaFormModal from "../components/caja/cajaFormModal.jsx"
+import MovimientoIngresoModal from "../components/caja/movimientoIngresoModal.jsx"
+import MovimientoEgresoModal from "../components/caja/movimientoEgresoModal.jsx"
 import {
   getCajas,
   getCajaPrincipal,
@@ -15,13 +15,13 @@ import {
   activarCaja,
   desactivarCaja,
   marcarCajaPrincipal,
-} from "../services/cajaService"
+} from "../services/cajaService.js"
 import {
   getMovimientosCaja,
   getMovimientosByCaja,
   registrarIngresoManual,
   registrarEgresoManual,
-} from "../services/movimientoCajaService"
+} from "../services/movimientoCajaService.js"
 
 export default function CajaPage() {
   const [cajas, setCajas] = useState([])

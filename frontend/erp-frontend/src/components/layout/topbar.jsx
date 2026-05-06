@@ -1,5 +1,5 @@
 import { Bell, Search, LogOut } from "lucide-react"
-import { useAuth } from "../../context/authContext"
+import { useAuth } from "../../context/authContext.jsx"
 
 export default function Topbar() {
   const { user, logout } = useAuth()

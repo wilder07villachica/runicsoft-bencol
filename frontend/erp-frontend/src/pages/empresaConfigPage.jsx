@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import { Building2, Save } from "lucide-react"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import { getMiEmpresa, updateMiEmpresa } from "../services/empresaService"
-import { useAuth } from "../context/authContext"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import { getMiEmpresa, updateMiEmpresa } from "../services/empresaService.js"
+import { useAuth } from "../context/authContext.jsx"
 
 export default function EmpresaConfigPage() {
   const { refreshUser } = useAuth()

@@ -1,8 +1,8 @@
-import { getClientes } from "./clienteService"
-import { getProductos } from "./productoService"
-import { getVentas } from "./ventaService"
-import { getCajas, getCajaPrincipal } from "./cajaService"
-import { getMovimientosCaja } from "./movimientoCajaService"
+import { getClientes } from "./clienteService.js"
+import { getProductos } from "./productoService.js"
+import { getVentas } from "./ventaService.js"
+import { getCajas, getCajaPrincipal } from "./cajaService.js"
+import { getMovimientosCaja } from "./movimientoCajaService.js"
 
 export const getDashboardData = async () => {
   const [clientes, productos, ventas, cajas, movimientos, cajaPrincipal] =

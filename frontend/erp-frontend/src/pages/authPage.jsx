@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Droplets, Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react"
-import { useAuth } from "../context/authContext"
-import { authService } from "../services/authService"
+import { useAuth } from "../context/authContext.jsx"
+import { authService } from "../services/authService.js"
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login")

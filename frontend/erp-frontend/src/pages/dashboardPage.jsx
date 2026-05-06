@@ -11,9 +11,9 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import { getDashboardData } from "../services/dashboardService"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import { getDashboardData } from "../services/dashboardService.js"
 
 const DONUT_COLORS = ["#6366F1", "#8B5CF6", "#22C55E", "#F59E0B", "#EF4444"]
 

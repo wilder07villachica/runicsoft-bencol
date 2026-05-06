@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react"
-import Sidebar from "../components/layout/sidebar"
-import Topbar from "../components/layout/topbar"
-import ProductoTable from "../components/productos/productoTable"
-import ProductoFormModal from "../components/productos/productoFormModal"
-import ProductoInfoModal from "../components/productos/productoInfoModal"
+import Sidebar from "../components/layout/sidebar.jsx"
+import Topbar from "../components/layout/topbar.jsx"
+import ProductoTable from "../components/productos/productoTable.jsx"
+import ProductoFormModal from "../components/productos/productoFormModal.jsx"
+import ProductoInfoModal from "../components/productos/productoInfoModal.jsx"
 import {
   getProductos,
   createProducto,
   updateProducto,
-} from "../services/productoService"
+} from "../services/productoService.js"
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState([])

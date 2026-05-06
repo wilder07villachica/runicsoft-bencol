@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/movimientos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app")
 public class MovimientoCajaController {
 
     private final MovimientoCajaService movimientoCajaService;

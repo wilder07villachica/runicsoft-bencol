@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
-import Sidebar from "../components/layout/Sidebar"
-import Topbar from "../components/layout/Topbar"
-import CajaResumenCards from "../components/caja/CajaResumenCards"
-import CajaTable from "../components/caja/CajaTable"
-import MovimientoCajaTable from "../components/caja/MovimientoCajaTable"
-import CajaFormModal from "../components/caja/CajaFormModal"
-import MovimientoIngresoModal from "../components/caja/MovimientoIngresoModal"
-import MovimientoEgresoModal from "../components/caja/MovimientoEgresoModal"
+import Sidebar from "../components/layout/sidebar"
+import Topbar from "../components/layout/topbar"
+import CajaResumenCards from "../components/caja/cajaResumenCards"
+import CajaTable from "../components/caja/cajaTable"
+import MovimientoCajaTable from "../components/caja/movimientoCajaTable"
+import CajaFormModal from "../components/caja/cajaFormModal"
+import MovimientoIngresoModal from "../components/caja/movimientoIngresoModal"
+import MovimientoEgresoModal from "../components/caja/movimientoEgresoModal"
 import {
   getCajas,
   getCajaPrincipal,

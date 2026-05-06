@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
-import Sidebar from "../components/layout/Sidebar"
-import Topbar from "../components/layout/Topbar"
-import ProductoTable from "../components/productos/ProductoTable"
-import ProductoFormModal from "../components/productos/ProductoFormModal"
-import ProductoInfoModal from "../components/productos/ProductoInfoModal"
+import Sidebar from "../components/layout/sidebar"
+import Topbar from "../components/layout/topbar"
+import ProductoTable from "../components/productos/productoTable"
+import ProductoFormModal from "../components/productos/productoFormModal"
+import ProductoInfoModal from "../components/productos/productoInfoModal"
 import {
   getProductos,
   createProducto,

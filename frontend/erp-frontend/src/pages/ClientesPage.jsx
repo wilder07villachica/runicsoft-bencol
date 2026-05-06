@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import Sidebar from "../components/layout/Sidebar"
-import Topbar from "../components/layout/Topbar"
-import ClienteTable from "../components/clientes/ClienteTable"
-import ClienteFormModal from "../components/clientes/ClienteFormModal"
-import ClienteInfoModal from "../components/clientes/ClienteInfoModal"
+import Sidebar from "../components/layout/sidebar"
+import Topbar from "../components/layout/topbar"
+import ClienteTable from "../components/clientes/clienteTable"
+import ClienteFormModal from "../components/clientes/clienteFormModal"
+import ClienteInfoModal from "../components/clientes/clienteInfoModal"
 import {
   getClientes,
   createCliente,

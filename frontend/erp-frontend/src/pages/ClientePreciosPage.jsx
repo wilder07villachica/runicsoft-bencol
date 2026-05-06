@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import Sidebar from "../components/layout/Sidebar"
-import Topbar from "../components/layout/Topbar"
-import PrecioTable from "../components/precios/PrecioTable"
-import PrecioFormModal from "../components/precios/PrecioFormModal"
+import Sidebar from "../components/layout/sidebar"
+import Topbar from "../components/layout/topbar"
+import PrecioTable from "../components/precios/precioTable"
+import PrecioFormModal from "../components/precios/precioFormModal"
 import { getClienteById } from "../services/clienteService"
 import { getProductos } from "../services/productoService"
 import {

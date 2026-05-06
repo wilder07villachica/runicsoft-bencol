@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { getCajasActivas } from "../services/CajaService"
 
-import Sidebar from "../components/layout/Sidebar"
-import Topbar from "../components/layout/Topbar"
+import Sidebar from "../components/layout/sidebar"
+import Topbar from "../components/layout/topbar"
 import {
   actualizarCuentaPorCobrar,
   listarCuentasPorCobrar,

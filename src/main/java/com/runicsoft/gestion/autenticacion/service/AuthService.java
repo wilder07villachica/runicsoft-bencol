@@ -190,15 +190,19 @@ public class AuthService {
 
             String url = frontendUrl + "/restablecer-password?token=" + token.getToken();
 
-            emailService.enviarCorreo(
-                    usuario.getCorreo(),
-                    "Recuperación de contraseña - Runicsoft Bencol",
-                    "Hola " + usuario.getNombre() + ",\n\n" +
-                            "Recibimos una solicitud para restablecer tu contraseña.\n\n" +
-                            "Haz clic en este enlace para crear una nueva contraseña:\n\n" + url + "\n\n" +
-                            "Este enlace vence en 1 hora.\n\n" +
-                            "Si tú no solicitaste esto, ignora este mensaje."
-            );
+            try {
+                emailService.enviarCorreo(
+                        usuario.getCorreo(),
+                        "Verifica tu cuenta - Runicsoft Bencol",
+                        "Hola " + usuario.getNombre() + ",\n\n" +
+                                "Gracias por registrarte en Runicsoft Bencol.\n\n" +
+                                "Para activar tu cuenta, haz clic en este enlace:\n\n" + url + "\n\n" +
+                                "Este enlace vence en 24 horas.\n\n" +
+                                "Si tú no creaste esta cuenta, ignora este mensaje."
+                );
+            } catch (Exception e) {
+                System.out.println("No se pudo enviar correo de verificación: " + e.getMessage());
+            }
         });
 
         return new MessageResponse("Si el correo existe, se enviaron instrucciones de recuperación.");

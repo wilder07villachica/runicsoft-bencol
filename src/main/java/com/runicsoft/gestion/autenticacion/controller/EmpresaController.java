@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/empresa")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173", "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app"})
 public class EmpresaController {
 
     private final EmpresaService empresaService;

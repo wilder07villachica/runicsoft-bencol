@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/cajas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app")
 public class CajaController {
 
     private final CajaService cajaService;

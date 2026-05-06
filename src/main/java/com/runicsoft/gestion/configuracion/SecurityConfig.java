@@ -67,8 +67,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app",
-                "https://runicsoft-bencol-i643c80vm-wilders-projects-13f519b6.vercel.app"
+                "https://runicsoft-bencol.vercel.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));

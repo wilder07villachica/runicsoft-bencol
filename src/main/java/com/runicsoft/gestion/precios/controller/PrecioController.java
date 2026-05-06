@@ -14,7 +14,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/precios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app")
 public class PrecioController {
 
     private final PrecioService precioService;

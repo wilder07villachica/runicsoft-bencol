@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/precio-categoria")
 @RequiredArgsConstructor
-@CrossOrigin
 public class PrecioCategoriaController {
 
     private final PrecioCategoriaService precioCategoriaService;

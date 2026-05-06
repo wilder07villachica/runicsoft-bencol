@@ -13,7 +13,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/cuentas-por-cobrar")
-@CrossOrigin(origins = "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app")
 public class CuentaPorCobrarController {
 
     private final CuentaPorCobrarService cuentaPorCobrarService;

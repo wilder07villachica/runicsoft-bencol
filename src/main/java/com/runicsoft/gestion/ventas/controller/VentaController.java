@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/ventas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "https://runicsoft-bencol-g2iytkooh-wilders-projects-13f519b6.vercel.app")
 public class VentaController {
 
     private final VentaService ventaService;

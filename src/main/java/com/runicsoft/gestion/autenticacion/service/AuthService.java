@@ -94,15 +94,19 @@ public class AuthService {
 
         String url = frontendUrl + "/verificar-correo?token=" + token.getToken();
 
-        emailService.enviarCorreo(
-                usuario.getCorreo(),
-                "Verifica tu cuenta - Runicsoft Bencol",
-                "Hola " + usuario.getNombre() + ",\n\n" +
-                        "Gracias por registrarte en Runicsoft Bencol.\n\n" +
-                        "Para activar tu cuenta, haz clic en este enlace:\n\n" + url + "\n\n" +
-                        "Este enlace vence en 24 horas.\n\n" +
-                        "Si tú no creaste esta cuenta, ignora este mensaje."
-        );
+        try {
+            emailService.enviarCorreo(
+                    usuario.getCorreo(),
+                    "Verifica tu cuenta - Runicsoft Bencol",
+                    "Hola " + usuario.getNombre() + ",\n\n" +
+                            "Gracias por registrarte en Runicsoft Bencol.\n\n" +
+                            "Para activar tu cuenta, haz clic en este enlace:\n\n" + url + "\n\n" +
+                            "Este enlace vence en 24 horas.\n\n" +
+                            "Si tú no creaste esta cuenta, ignora este mensaje."
+            );
+        } catch (Exception e) {
+            System.out.println("No se pudo enviar correo de verificación: " + e.getMessage());
+        }
 
         return new MessageResponse("Registro creado. Revisa tu correo para activar la cuenta.");
     }
